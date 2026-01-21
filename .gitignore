@@ -3,3 +3,7 @@
 */__pycache__/
 /__pycache__/
 .token
+.env
+*.db
+.venv
+.pytest_cache

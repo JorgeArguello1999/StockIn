@@ -1,0 +1,16 @@
+[project]
+name = "stockin"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dotenv>=0.9.9",
+    "flask>=3.1.2",
+    "flask-sqlalchemy>=3.1.1",
+    "flask-migrate>=4.0.7",
+    "flask-login>=0.6.3",
+    "flask-wtf>=1.2.1",
+    "email-validator>=2.1.0.post1",
+    "pytest>=8.0.0",
+]
