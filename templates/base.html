@@ -113,9 +113,11 @@
         {% endwith %}
 
         <!-- Content Block -->
+        {% block main_content_wrapper %}
         <div class="bg-white shadow-lg rounded-xl border border-slate-200 p-6 md:p-8">
             {% block content %}{% endblock %}
         </div>
+        {% endblock %}
     </main>
 
     <!-- Footer -->
