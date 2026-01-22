@@ -8,3 +8,5 @@
 .venv
 .pytest_cache
 instance/
+migrations/__pycache__/
+migrations/versions/__pycache__/
