@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StockIn{% endblock %}</title>
+
+    <!-- Tailwind CSS (CDN for development) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter for high legibility -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        // High contrast colors for outdoor visibility
+                        brand: {
+                            500: '#0055FF', // Bright Blue
+                            600: '#0044CC',
+                            700: '#003399',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Utilitario para textos de alto contraste */
+        .high-contrast-text {
+            color: #0f172a;
+            /* Slate 900 */
+        }
+
+        .high-contrast-bg {
+            background-color: #f8fafc;
+            /* Slate 50 */
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col">
+
+    <!-- Navbar: High contrast, large touch targets -->
+    <nav class="bg-white border-b-2 border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20"> <!-- Increased height for better touch access -->
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="{{ url_for('home.home') }}"
+                            class="text-3xl font-extrabold text-slate-900 tracking-tight">
+                            StockIn
+                        </a>
+                    </div>
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
+                        <a href="#"
+                            class="border-transparent text-slate-900 hover:border-brand-500 hover:text-brand-600 inline-flex items-center px-1 pt-1 border-b-2 text-lg font-medium">
+                            Dashboard
+                        </a>
+                        <a href="#"
+                            class="border-transparent text-slate-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-lg font-medium">
+                            Inventario
+                        </a>
+                    </div>
+                </div>
+                <!-- Mobile Menu Button Area (Placeholder) -->
+                <div class="-mr-2 flex items-center md:hidden">
+                    <button type="button"
+                        class="bg-white inline-flex items-center justify-center p-3 rounded-md text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500">
+                        <span class="sr-only">Abrir menú</span>
+                        <!-- Icon menu -->
+                        <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mb-6 space-y-4">
+            {% for category, message in messages %}
+            <div class="p-4 rounded-md shadow-sm text-lg font-medium border-l-4 
+                    {% if category == 'error' %} bg-red-50 border-red-600 text-red-900
+                    {% elif category == 'success' %} bg-green-50 border-green-600 text-green-900
+                    {% else %} bg-blue-50 border-blue-600 text-blue-900 {% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Content Block -->
+        <div class="bg-white shadow-lg rounded-xl border border-slate-200 p-6 md:p-8">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-base font-semibold text-slate-500">
+                &copy; 2024 StockIn System. Optimizado para uso en campo.
+            </p>
+        </div>
+    </footer>
+
+</body>
+
+</html>
