@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Iniciar Sesión - StockIn{% endblock %}
+
+{% block navbar_inner %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-center h-20">
+        <div class="flex-shrink-0 flex items-center">
+            <span class="text-3xl font-extrabold text-slate-900 tracking-tight">
+                StockIn
+            </span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="flex min-h-[calc(100vh-200px)] flex-col justify-center py-6 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-slate-900">
+            Iniciar Sesión
+        </h2>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-slate-200">
+            <form class="space-y-6" action="#" method="POST">
+                <div>
+                    <label for="email" class="block text-lg font-medium text-slate-900">
+                        Usuario o Email
+                    </label>
+                    <div class="mt-1">
+                        <input id="email" name="email" type="text" autocomplete="email" required
+                            class="block w-full appearance-none rounded-md border border-slate-300 px-3 py-3 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-brand-500 sm:text-lg">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-lg font-medium text-slate-900">
+                        Contraseña
+                    </label>
+                    <div class="mt-1">
+                        <input id="password" name="password" type="password" autocomplete="current-password" required
+                            class="block w-full appearance-none rounded-md border border-slate-300 px-3 py-3 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-brand-500 sm:text-lg">
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit"
+                        class="flex w-full justify-center rounded-md border border-transparent bg-brand-600 py-3 px-4 text-lg font-medium text-white shadow-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2">
+                        Ingresar
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-6">
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-slate-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="bg-white px-2 text-slate-500">
+                            ¿Problemas de acceso?
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-1 gap-3">
+                    <div class="rounded-md bg-yellow-50 p-4 border border-yellow-200">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <!-- Heroicon name: mini/exclamation-triangle -->
+                                <svg class="h-6 w-6 text-yellow-500" xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd"
+                                        d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-yellow-800">Atención</h3>
+                                <div class="mt-2 text-sm text-yellow-700">
+                                    <p>En caso de perdida de contraseña comuníquese con el
+                                        <strong>Administrador</strong>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

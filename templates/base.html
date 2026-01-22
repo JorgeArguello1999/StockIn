@@ -54,6 +54,7 @@
 
     <!-- Navbar: High contrast, large touch targets -->
     <nav class="bg-white border-b-2 border-slate-200 shadow-sm">
+        {% block navbar_inner %}
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-20"> <!-- Increased height for better touch access -->
                 <div class="flex">
@@ -89,6 +90,7 @@
                 </div>
             </div>
         </div>
+        {% endblock %}
     </nav>
 
     <!-- Main Content Area -->
