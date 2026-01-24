@@ -1,4 +1,4 @@
-from app.main import bp
+from app.routes import bp
 
 @bp.route('/')
 def index():
