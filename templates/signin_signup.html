@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In / Sign Up - StockIn{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-container">
+        <!-- Sign In Form -->
+        <div class="auth-box sign-in-box" id="signInBox">
+            <h2>Welcome Back</h2>
+            <p class="subtitle">Enter your credentials to access your account</p>
+            <form action="{{ url_for('login.signin_signup') }}" method="POST">
+                <div class="input-group">
+                    <label for="signin-email">Email Address</label>
+                    <input type="email" id="signin-email" name="email" placeholder="name@company.com" required>
+                </div>
+                <div class="input-group">
+                    <label for="signin-password">Password</label>
+                    <input type="password" id="signin-password" name="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Sign In</button>
+            </form>
+            <p class="switch-text">
+                Don't have an account? <button type="button" class="btn-link" onclick="toggleAuth('signup')">Sign
+                    Up</button>
+            </p>
+        </div>
+
+        <!-- Sign Up Form -->
+        <div class="auth-box sign-up-box hidden" id="signUpBox">
+            <h2>Create Account</h2>
+            <p class="subtitle">Join us to manage your stock efficiently</p>
+            <form action="{{ url_for('login.signin_signup') }}" method="POST">
+                <div class="input-group">
+                    <label for="signup-email">Email Address</label>
+                    <input type="email" id="signup-email" name="email" placeholder="name@company.com" required>
+                </div>
+                <div class="input-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" name="password" placeholder="••••••••" required>
+                </div>
+                <div class="input-group">
+                    <label for="signup-confirm-password">Confirm Password</label>
+                    <input type="password" id="signup-confirm-password" name="confirm_password" placeholder="••••••••"
+                        required>
+                </div>
+                <button type="submit" class="btn btn-primary">Sign Up</button>
+            </form>
+            <p class="switch-text">
+                Already have an account? <button type="button" class="btn-link" onclick="toggleAuth('signin')">Sign
+                    In</button>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleAuth(mode) {
+        const signInBox = document.getElementById('signInBox');
+        const signUpBox = document.getElementById('signUpBox');
+
+        if (mode === 'signup') {
+            signInBox.classList.add('hidden');
+            signUpBox.classList.remove('hidden');
+        } else {
+            signUpBox.classList.add('hidden');
+            signInBox.classList.remove('hidden');
+        }
+    }
+</script>
+{% endblock %}
