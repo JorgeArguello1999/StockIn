@@ -77,13 +77,19 @@ def obtener_historial_vehiculo(placa):
     ordenes = OrdenTrabajo.query.filter_by(placa_vehiculo=placa).order_by(OrdenTrabajo.numeroOT.desc()).all()
     # Assuming 'fecha_ingreso' is not clearly defined in snippet, using OT ID as proxy for order 
     # or if we have timestamps. The snippet didn't show the model def fully but let's assume basic fields.
-    return [{
-        "id": ot.numeroOT,
-        "fecha": ot.fecha_ingreso.strftime('%Y-%m-%d %H:%M') if ot.fecha_ingreso else "N/A",
-        "contenido": ot.sintomas,
-        "estado": ot.estado,
-        "total": 0.0 # Placeholder, need billing logic to calc total
-    } for ot in ordenes]
+    result = []
+    for ot in ordenes:
+        costo_repuestos = sum(d.precio_snapshot * d.cantidad for d in ot.detalles)
+        total = costo_repuestos + float(ot.monto_mano_obra or 0)
+        
+        result.append({
+            "id": ot.numeroOT,
+            "fecha": ot.fecha_ingreso.strftime('%Y-%m-%d %H:%M') if ot.fecha_ingreso else "N/A",
+            "contenido": ot.sintomas,
+            "estado": ot.estado,
+            "total": total
+        })
+    return result
 
 def listar_detalles(numero_ot):
     detalles = OrdenDetalleRepuesto.query.filter_by(orden_id=numero_ot).all()

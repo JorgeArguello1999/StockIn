@@ -26,11 +26,13 @@
         </div>
 
         <ul class="nav-links">
+            {% if user.role == 'admin' %}
             <li class="nav-item">
                 <button class="nav-btn active" onclick="showPanel('panel-inicio', this)">
                     🏠 Inicio
                 </button>
             </li>
+            {% endif %}
             {% if user.role == 'admin' %}
             <li class="nav-item">
                 <button class="nav-btn" onclick="showPanel('panel-recepcion', this)">
@@ -76,7 +78,7 @@
     <main id="main-content" class="main-content">
 
         <!-- === PANEL INICIO (TODOS) === -->
-        <div id="panel-inicio" class="panel active">
+        <div id="panel-inicio" class="panel {% if user.role == 'admin' %}active{% endif %}">
             <div class="panel-header">
                 <h1 class="panel-title">Resumen del Negocio</h1>
                 <button class="btn btn-primary btn-sm" onclick="loadDashboardMetrics()">🔄 Actualizar</button>

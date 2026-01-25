@@ -342,7 +342,9 @@ function createOtCard(ot, columnId) {
 
         ${!isFinalized ? `
         <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button class="btn btn-sm btn-primary" onclick="openRepuestoModal(${ot.id})">+ Repuesto</button>
+            ${ot.estado === 'En Proceso' ? 
+                `<button class="btn btn-sm btn-primary" onclick="openRepuestoModal(${ot.id})">+ Repuesto</button>` 
+                : ''}
             <button class="btn btn-sm btn-secondary" onclick="openOtDetails(${ot.id})">🔍 Detalles</button>
             ${ot.estado === 'Pendiente' ? 
                 `<button class="btn btn-sm btn-success" onclick="startWork(${ot.id})">Iniciar</button>` : 
@@ -1310,3 +1312,12 @@ function renderDashboard(data) {
         }
     });
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Determine active panel and init proper data
+    const activePanel = document.querySelector('.panel.active');
+    if (activePanel) {
+        if (activePanel.id === 'panel-inicio') loadDashboardMetrics();
+        if (activePanel.id === 'panel-taller') refreshTaller();
+    }
+});
