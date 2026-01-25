@@ -7,6 +7,7 @@
     <title>StockIn - Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body class="dashboard-layout">
@@ -25,9 +26,14 @@
         </div>
 
         <ul class="nav-links">
+            <li class="nav-item">
+                <button class="nav-btn active" onclick="showPanel('panel-inicio', this)">
+                    🏠 Inicio
+                </button>
+            </li>
             {% if user.role == 'admin' %}
             <li class="nav-item">
-                <button class="nav-btn active" onclick="showPanel('panel-recepcion', this)">
+                <button class="nav-btn" onclick="showPanel('panel-recepcion', this)">
                     📋 Recepción
                 </button>
             </li>
@@ -69,9 +75,53 @@
     <!-- Main Content -->
     <main id="main-content" class="main-content">
 
+        <!-- === PANEL INICIO (TODOS) === -->
+        <div id="panel-inicio" class="panel active">
+            <div class="panel-header">
+                <h1 class="panel-title">Resumen del Negocio</h1>
+                <button class="btn btn-primary btn-sm" onclick="loadDashboardMetrics()">🔄 Actualizar</button>
+            </div>
+
+            <!-- Stats Row -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div class="card" style="text-align: center;">
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Ventas Hoy</div>
+                    <div id="stat-ventas-hoy" style="font-size: 2rem; font-weight: 700; color: var(--success-color);">
+                        $0.00</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Ventas Mes</div>
+                    <div id="stat-ventas-mes" style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">
+                        $0.00</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Órdenes Activas</div>
+                    <div id="stat-ordenes-activas"
+                        style="font-size: 2rem; font-weight: 700; color: var(--warning-color);">0</div>
+                </div>
+            </div>
+
+            <!-- Charts & Alerts Row -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                <div class="card">
+                    <h3>Tendencia de Ventas (7 Días)</h3>
+                    <div style="height: 300px;">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>⚠️ Alerta Stock Bajo</h3>
+                    <ul id="low-stock-list" style="list-style: none; padding: 0; margin-top: 1rem;">
+                        <li style="color: var(--text-secondary); text-align: center;">Cargando...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
         <!-- === PANEL RECEPCIÓN (ADMIN) === -->
         {% if user.role == 'admin' %}
-        <div id="panel-recepcion" class="panel active">
+        <div id="panel-recepcion" class="panel">
             <div class="panel-header">
                 <h1 class="panel-title">Recepción de Vehículos</h1>
             </div>

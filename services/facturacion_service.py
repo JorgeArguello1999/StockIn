@@ -75,7 +75,7 @@ def listar_ordenes_pendientes_pago():
             "placa": ot.placa_vehiculo,
             "total_repuestos": costo_repuestos
         })
-        
+    return result
 
 def listar_facturas(query=None):
     """

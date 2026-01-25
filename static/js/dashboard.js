@@ -14,6 +14,7 @@ function showPanel(panelId, btn) {
     btn.classList.add('active');
 
     // Trigger loads if needed
+    if (panelId === 'panel-inicio') loadDashboardMetrics();
     if (panelId === 'panel-recepcion') initReception();
     if (panelId === 'panel-taller') refreshTaller();
     if (panelId === 'panel-ventas') initPOS();
@@ -904,6 +905,10 @@ async function loadLiquidaciones() {
                 <td><span class="badge badge-primary">${ot.placa}</span></td>
                 <td>$${ot.total_repuestos.toFixed(2)}</td>
                 <td>
+                    <input type="number" 
+                           class="form-control" 
+                           placeholder="0.00" 
+                           id="mo-${ot.numero_ot}" 
                            min="0" step="0.01"
                            style="width: 100px;">
                 </td>
@@ -1011,6 +1016,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const activePanel = document.querySelector('.panel.active');
     if(activePanel) {
         const id = activePanel.id;
+        if(id === 'panel-inicio') loadDashboardMetrics();
         if(id === 'panel-recepcion') initReception();
         if(id === 'panel-taller') refreshTaller();
         if(id === 'panel-ventas') initPOS();
@@ -1206,4 +1212,79 @@ function filterFacturas(query) {
 
 function openFacturaPDF(nro) {
     window.open(`/static/invoices/factura_${nro}.pdf`, '_blank');
+}
+
+// === DASHBOARD METRICS ===
+let salesChartInstance = null;
+
+async function loadDashboardMetrics() {
+    // Only try to load if specific elements exist (avoids errors on limited roles if elements hidden)
+    const statToday = document.getElementById('stat-ventas-hoy');
+    if(!statToday) return; // metrics panel not present
+
+    try {
+        const res = await fetch(`${API_BASE}/dashboard/metrics`);
+        if(res.ok) {
+            const data = await res.json();
+            renderDashboard(data);
+        }
+    } catch(e) { console.error("Metrics error", e); }
+}
+
+function renderDashboard(data) {
+    document.getElementById('stat-ventas-hoy').innerText = `$${data.ventas_hoy.toFixed(2)}`;
+    document.getElementById('stat-ventas-mes').innerText = `$${data.ventas_mes.toFixed(2)}`;
+    document.getElementById('stat-ordenes-activas').innerText = data.ordenes_activas;
+    
+    // Low Stock
+    const list = document.getElementById('low-stock-list');
+    list.innerHTML = '';
+    if(data.alertas_stock.length === 0) {
+        list.innerHTML = '<li style="color: var(--success-color); text-align: center;">Todo en orden ✅</li>';
+    } else {
+        data.alertas_stock.forEach(item => {
+            const li = document.createElement('li');
+            li.style.padding = '0.5rem';
+            li.style.borderBottom = '1px solid var(--border-color)';
+            li.innerHTML = `
+                <div style="display:flex; justify-content:space-between;">
+                    <span>${item.nombre}</span>
+                    <strong style="color: var(--danger-color);">${item.stock}</strong>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    }
+    
+    // Chart
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    
+    if(salesChartInstance) {
+        salesChartInstance.destroy();
+    }
+    
+    salesChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.trend.labels,
+            datasets: [{
+                label: 'Ventas ($)',
+                data: data.trend.data,
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
 }
