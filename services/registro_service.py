@@ -18,7 +18,9 @@ def validar_vehiculo(placa):
         "cliente": {
             "id": vehiculo.propietario.id_cliente,
             "nombre": vehiculo.propietario.nombre,
-            "contacto": vehiculo.propietario.contacto
+            "nombre": vehiculo.propietario.nombre,
+            "cedula": vehiculo.propietario.cedula,
+            "telefono": vehiculo.propietario.telefono
         }
     }
 
@@ -48,7 +50,10 @@ def procesar_registro(data):
             # Create Client first
             cliente = Cliente(
                 nombre=data.get('cliente_nombre'),
-                contacto=data.get('cliente_contacto')
+                cedula=data.get('cliente_cedula'),
+                telefono=data.get('cliente_telefono'),
+                direccion=data.get('cliente_direccion'),
+                email=data.get('cliente_email')
             )
             db.session.add(cliente)
             db.session.flush() # Get ID
