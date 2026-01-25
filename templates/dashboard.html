@@ -60,6 +60,12 @@
                 </button>
             </li>
             <li class="nav-item">
+                <button class="nav-btn" onclick="showPanel('panel-usuarios', this)">
+                    👥 Usuarios
+                </button>
+            </li>
+            </li>
+            <li class="nav-item">
                 <button class="nav-btn" onclick="showPanel('panel-facturas', this)">
                     📑 Facturas
                 </button>
@@ -722,6 +728,109 @@
         </div>
     </div>
 
+    </div>
+
+    <!-- === PANEL USUARIOS (ADMIN) === -->
+    <div id="panel-usuarios" class="panel">
+        <div class="panel-header">
+            <h1 class="panel-title">Gestión de Usuarios</h1>
+            <div style="display:flex; gap:0.5rem;">
+                <button class="btn btn-primary btn-sm" onclick="loadUsers()">🔄 Actualizar</button>
+                <button class="btn btn-success btn-sm" onclick="openModal('modal-crear-usuario')">+ Crear
+                    Usuario</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <table style="width:100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="text-align:left; border-bottom: 2px solid var(--border-color);">
+                        <th style="padding:1rem;">ID</th>
+                        <th style="padding:1rem;">Usuario</th>
+                        <th style="padding:1rem;">Rol</th>
+                        <th style="padding:1rem;">Email</th>
+                        <th style="padding:1rem;">Fecha Creación</th>
+                        <th style="padding:1rem;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="users-list">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modals for Users -->
+    <div id="modal-crear-usuario" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Crear Usuario</h3>
+                <button class="close-modal" onclick="closeModal('modal-crear-usuario')">&times;</button>
+            </div>
+            <form onsubmit="handleCreateUser(event)">
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <input type="text" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label>Rol</label>
+                    <select name="role" required class="form-control">
+                        <option value="mechanic">Mecánico</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Crear</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-reset-password" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Resetear Contraseña</h3>
+                <button class="close-modal" onclick="closeModal('modal-reset-password')">&times;</button>
+            </div>
+            <form onsubmit="handleResetPassword(event)">
+                <input type="hidden" id="reset-user-id" name="user_id">
+                <div class="form-group">
+                    <p>Usuario: <strong id="reset-user-name">---</strong></p>
+                </div>
+                <div class="form-group">
+                    <label>Nueva Contraseña</label>
+                    <input type="password" id="new-password" required>
+                </div>
+                <button type="submit" class="btn btn-warning btn-block">Actualizar Contraseña</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-confirmar-delete" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Confirmar Eliminación Admin</h3>
+                <button class="close-modal" onclick="closeModal('modal-confirmar-delete')">&times;</button>
+            </div>
+            <form onsubmit="handleDeleteAdmin(event)">
+                <input type="hidden" id="delete-admin-id" name="user_id">
+                <div class="form-group">
+                    <p style="color: var(--danger-color);">Estás eliminando a un ADMINISTRADOR. Esta acción requiere
+                        autorización.</p>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña del Sistema (Entorno)</label>
+                    <input type="password" id="system-password" required placeholder="Clave maestra">
+                </div>
+                <button type="submit" class="btn btn-danger btn-block">Confirmar Eliminación</button>
+            </form>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>

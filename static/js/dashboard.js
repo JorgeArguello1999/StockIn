@@ -1332,11 +1332,134 @@ function renderDashboard(data) {
     });
 }
 
+// === USER MANAGEMENT (Admin) ===
+
+async function loadUsers() {
+    const tbody = document.getElementById('users-list');
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Cargando...</td></tr>';
+    
+    try {
+        const res = await fetch(`${API_BASE}/users/listar`);
+        if(!res.ok) throw new Error("Acceso denegado o error");
+        
+        const users = await res.json();
+        tbody.innerHTML = users.map(u => `
+            <tr>
+                <td>${u.id}</td>
+                <td><strong>${u.username}</strong></td>
+                <td><span class="badge ${u.role === 'admin' ? 'danger' : 'primary'}">${u.role}</span></td>
+                <td>${u.email}</td>
+                <td>${u.created_at}</td>
+                <td>
+                    <button class="btn btn-sm btn-warning" onclick="promptResetPassword(${u.id}, '${u.username}')">🔑</button>
+                    <button class="btn btn-sm btn-danger" onclick="promptDeleteUser(${u.id}, '${u.role}')">🗑️</button>
+                </td>
+            </tr>
+        `).join('');
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error: ${e.message}</td></tr>`;
+    }
+}
+
+async function handleCreateUser(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+    
+    try {
+        const res = await fetch(`${API_BASE}/users/crear`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        
+        if(res.ok) {
+            showAlert(result.mensaje, "Usuario Creado");
+            closeModal('modal-crear-usuario');
+            e.target.reset();
+            loadUsers();
+        } else {
+            showAlert(result.error || "Error al crear", "Error");
+        }
+    } catch(e) { showAlert("Error de red", "Error"); }
+}
+
+function promptResetPassword(uid, uname) {
+    document.getElementById('reset-user-id').value = uid;
+    document.getElementById('reset-user-name').innerText = uname;
+    document.getElementById('new-password').value = ''; 
+    openModal('modal-reset-password');
+}
+
+async function handleResetPassword(e) {
+    e.preventDefault();
+    const uid = document.getElementById('reset-user-id').value;
+    const pwd = document.getElementById('new-password').value;
+    
+    try {
+        const res = await fetch(`${API_BASE}/users/reset-password/${uid}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({password: pwd})
+        });
+        const result = await res.json();
+        
+        if(res.ok) {
+            showAlert(result.mensaje, "Éxito");
+            closeModal('modal-reset-password');
+        } else {
+            showAlert(result.error, "Error");
+        }
+    } catch(e) { showAlert("Error de red", "Error"); }
+}
+
+function promptDeleteUser(uid, role) {
+    if(role === 'admin') {
+        document.getElementById('delete-admin-id').value = uid;
+        document.getElementById('system-password').value = '';
+        openModal('modal-confirmar-delete');
+    } else {
+        if(confirm("¿Eliminar este usuario permanentemente?")) {
+            submitDeleteUser(uid);
+        }
+    }
+}
+
+async function handleDeleteAdmin(e) {
+    e.preventDefault();
+    const uid = document.getElementById('delete-admin-id').value;
+    const sysPass = document.getElementById('system-password').value;
+    
+    submitDeleteUser(uid, sysPass);
+    closeModal('modal-confirmar-delete');
+}
+
+async function submitDeleteUser(uid, sysPass=null) {
+    try {
+        const payload = sysPass ? { system_password: sysPass } : {};
+        const res = await fetch(`${API_BASE}/users/eliminar/${uid}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        
+        if(res.ok) {
+            showAlert(result.mensaje, "Eliminado");
+            loadUsers();
+        } else {
+            showAlert(result.error, "Error");
+        }
+    } catch(e) { showAlert("Error de red", "Error"); }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Determine active panel and init proper data
     const activePanel = document.querySelector('.panel.active');
     if (activePanel) {
         if (activePanel.id === 'panel-inicio') loadDashboardMetrics();
         if (activePanel.id === 'panel-taller') refreshTaller();
+        if (activePanel.id === 'panel-usuarios') loadUsers();
     }
 });

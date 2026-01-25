@@ -5,6 +5,7 @@ from .venta_routes import venta_api
 from .facturacion_routes import facturacion_api
 from .client_routes import client_api
 from .dashboard_routes import dashboard_api
+from .user_routes import user_api
 
 def register_api_routes(app):
     app.register_blueprint(taller_api)
@@ -14,3 +15,4 @@ def register_api_routes(app):
     app.register_blueprint(facturacion_api)
     app.register_blueprint(client_api)
     app.register_blueprint(dashboard_api)
+    app.register_blueprint(user_api)
