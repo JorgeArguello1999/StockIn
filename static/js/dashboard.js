@@ -309,19 +309,30 @@ function createOtCard(ot, columnId) {
     
     const div = document.createElement('div');
     div.className = 'ot-card';
+    div.style.width = '100%'; // Ensure full width usage
+    
+    // Disable actions if finalized
+    const isFinalized = ot.estado === 'Finalizada';
+    const disabledAttr = isFinalized ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
+    
     div.innerHTML = `
         <div class="ot-header">
             <span class="ot-plate">${ot.placa}</span>
             <span class="ot-id">#${ot.id}</span>
         </div>
-        <div>Estado: ${ot.estado}</div>
-        <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+        <div style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-primary);">
+            <b>${ot.categoria || 'Trabajo'}:</b> ${ot.sintomas}
+        </div>
+        <div><span class="badge ${ot.estado === 'Finalizada' ? 'success' : (ot.estado === 'En Proceso' ? 'primary' : 'warning')}">${ot.estado}</span></div>
+        ${!isFinalized ? `
+        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
             <button class="btn btn-sm btn-primary" onclick="openRepuestoModal(${ot.id})">+ Repuesto</button>
-            ${ot.estado === 'pendiente' ? 
+            ${ot.estado === 'Pendiente' ? 
                 `<button class="btn btn-sm btn-success" onclick="startWork(${ot.id})">Iniciar</button>` : 
                 `<button class="btn btn-sm btn-danger" onclick="finishWork(${ot.id})">Finalizar</button>`
             }
         </div>
+        ` : `<div style="margin-top:0.5rem; font-size:0.8rem; color: var(--success-color);">Orden Cerrada</div>`}
     `;
     col.appendChild(div);
 }

@@ -38,6 +38,11 @@ def agregar_repuesto(numero_ot, id_producto, cantidad):
             precio_snapshot=producto.precio
         )
         
+        
+        # Auto-update status to 'En Proceso' if it was 'Pendiente'
+        if ot.estado == 'Pendiente':
+            ot.estado = 'En Proceso'
+            
         db.session.add(detalle)
         db.session.commit()
         

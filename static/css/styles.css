@@ -266,6 +266,8 @@ body {
     border-radius: var(--radius-lg);
     padding: 1rem;
     border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
 }
 
 .kanban-header {
