@@ -1,0 +1,80 @@
+from extensions import db
+from models.client_vehicle import Cliente, Vehiculo
+from models.work_order import OrdenTrabajo
+
+def validar_vehiculo(placa):
+    """
+    Check if a vehicle exists.
+    Returns: Dict with vehicle and client info, or None.
+    """
+    vehiculo = Vehiculo.query.get(placa)
+    if not vehiculo:
+        return None
+    
+    return {
+        "placa": vehiculo.placa,
+        "marca": vehiculo.marca,
+        "modelo": vehiculo.modelo,
+        "cliente": {
+            "id": vehiculo.propietario.id_cliente,
+            "nombre": vehiculo.propietario.nombre,
+            "contacto": vehiculo.propietario.contacto
+        }
+    }
+
+def procesar_registro(data):
+    """
+    Process inflow registration.
+    Input data: {
+        "placa": str, "marca": str, "modelo": str,
+        "cliente_nombre": str, "cliente_contacto": str,
+        "sintomas": str, "categoria_color": str
+    }
+    """
+    try:
+        # 1. Handle Client
+        # Note: In a real app we might search by ID or strict name match. 
+        # Here we assume if vehicle doesn't exist or we want to create/update.
+        # But per logic: "Si cliente no existe, crearlo". 
+        # We'll search by phone/contact if possible or just create new for simplicity if no ID provided.
+        # For this MVP, let's check if the vehicle exists to find the owner, else create new.
+        
+        placa = data.get('placa')
+        vehiculo = Vehiculo.query.get(placa)
+        
+        if vehiculo:
+            cliente = vehiculo.propietario
+        else:
+            # Create Client first
+            cliente = Cliente(
+                nombre=data.get('cliente_nombre'),
+                contacto=data.get('cliente_contacto')
+            )
+            db.session.add(cliente)
+            db.session.flush() # Get ID
+            
+            # Create Vehicle
+            vehiculo = Vehiculo(
+                placa=placa,
+                marca=data.get('marca'),
+                modelo=data.get('modelo'),
+                cliente_id=cliente.id_cliente
+            )
+            db.session.add(vehiculo)
+            db.session.flush()
+
+        # 2. Create OT
+        orden = OrdenTrabajo(
+            placa_vehiculo=vehiculo.placa,
+            sintomas=data.get('sintomas'),
+            categoria_color=data.get('categoria_color'),
+            estado='Pendiente'
+        )
+        db.session.add(orden)
+        db.session.commit()
+        
+        return {"numeroOT": orden.numeroOT, "mensaje": "Orden creada exitosamente"}
+
+    except Exception as e:
+        db.session.rollback()
+        raise e

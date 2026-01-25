@@ -17,6 +17,10 @@ def create_app():
     # Register Blueprints
     from routes import register_routes
     register_routes(app)
+    
+    # Register API Blueprints
+    from routes.api import register_api_routes
+    register_api_routes(app)
 
     return app
 
