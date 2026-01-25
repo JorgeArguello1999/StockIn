@@ -376,9 +376,11 @@ async function processSale() {
         const result = await res.json();
         
         if(res.ok) {
-            showAlert(`Venta exitosa! ID: ${result.id_venta} Total: $${result.total}`, 'Venta Confirmada');
+            showAlert(result.mensaje, 'Venta Confirmada');
             carrito = [];
             renderCart();
+            // Refresh inventory grid to show updated stock
+            fetchInventory().then(() => renderInventory(localInventory));
         } else {
             showAlert('Error: ' + result.error, 'Error');
         }

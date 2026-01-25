@@ -35,9 +35,11 @@ def realizar_venta_directa(items):
         db.session.flush() # Get ID
 
         # 3. Deduct stock and link details
+        items_desc = []
         for det in detalles_para_crear:
             producto = det['producto']
             producto.descontar_stock(det['cantidad'])
+            items_desc.append(f"{producto.nombre} (x{det['cantidad']})")
             
             detalle_bd = VentaDetalle(
                 venta_id=venta.id_venta,
@@ -47,7 +49,8 @@ def realizar_venta_directa(items):
             db.session.add(detalle_bd)
         
         db.session.commit()
-        return venta, "Venta realizada con éxito"
+        msg_detalle = ", ".join(items_desc)
+        return venta, f"Venta #{venta.id_venta} confirmada. Items: {msg_detalle}. Total: ${total_venta:.2f}"
 
     except Exception as e:
         db.session.rollback()
