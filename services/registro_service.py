@@ -83,3 +83,17 @@ def procesar_registro(data):
     except Exception as e:
         db.session.rollback()
         raise e
+
+def listar_vehiculos():
+    """Returns list of vehicles with owner info."""
+    vehiculos = Vehiculo.query.all()
+    return [{
+        "placa": v.placa,
+        "marca": v.marca,
+        "modelo": v.modelo,
+        "cliente": {
+            "nombre": v.propietario.nombre,
+            "cedula": v.propietario.cedula,
+            "telefono": v.propietario.telefono
+        }
+    } for v in vehiculos]

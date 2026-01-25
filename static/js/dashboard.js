@@ -14,6 +14,7 @@ function showPanel(panelId, btn) {
     btn.classList.add('active');
 
     // Trigger loads if needed
+    if (panelId === 'panel-recepcion') initReception();
     if (panelId === 'panel-taller') refreshTaller();
     if (panelId === 'panel-ventas') initPOS();
     if (panelId === 'panel-caja') loadLiquidaciones();
@@ -30,21 +31,73 @@ function closeModal(modalId) {
 
 // === RECEPCIÓN ===
 
-async function checkPlaca(placa) {
-    if(placa.length < 3) return;
-    const resDiv = document.getElementById('placa-resultado');
-    
+let localVehicles = [];
+
+async function initReception() {
+    await fetchVehicles();
+    renderReception(localVehicles);
+}
+
+async function fetchVehicles() {
     try {
-        const response = await fetch(`${API_BASE}/registro/validar/${placa}`);
-        const data = await response.json();
-        if(response.ok) {
-            resDiv.innerHTML = `<span style="color: var(--success-color)">Vehículo encontrado: ${data.marca} ${data.modelo}</span>`;
-        } else {
-            resDiv.innerHTML = `<span style="color: var(--text-secondary)">Vehículo nuevo (se registrará al crear orden)</span>`;
-        }
-    } catch(e) {
-        console.error(e);
-    }
+        const res = await fetch(`${API_BASE}/registro/listar`);
+        if(res.ok) localVehicles = await res.json();
+    } catch(e) { console.error(e); }
+}
+
+function renderReception(list) {
+    const grid = document.getElementById('reception-grid');
+    grid.innerHTML = '';
+
+    // "Add New" Card
+    const addCard = document.createElement('div');
+    addCard.className = 'inventory-card inventory-card-add';
+    addCard.innerHTML = `
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; color: var(--primary-color);">+</div>
+            <div style="font-weight: 600;">Nuevo Ingreso</div>
+        </div>
+    `;
+    addCard.onclick = () => openModal('modal-nuevo-ingreso');
+    grid.appendChild(addCard);
+
+    // Vehicle Cards
+    list.forEach(v => {
+        const card = document.createElement('div');
+        card.className = 'inventory-card';
+        card.innerHTML = `
+            <div class="inv-img" style="background: #1e293b; height: 80px;">
+                <span style="font-size: 2rem;">🚗</span>
+            </div>
+            <div class="inv-body">
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color); text-align: center; margin-bottom: 0.5rem;">
+                    ${v.placa}
+                </div>
+                <div style="font-weight: 600;">${v.marca} ${v.modelo}</div>
+                <div class="inv-meta" style="margin-top: 0.5rem;">
+                    <div>👤 ${v.cliente.nombre}</div>
+                    <div>🆔 ${v.cliente.cedula}</div>
+                    <div>📞 ${v.cliente.telefono}</div>
+                </div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function filterReception(query) {
+    query = query.toLowerCase();
+    const filtered = localVehicles.filter(v => 
+        v.placa.toLowerCase().includes(query) || 
+        v.cliente.nombre.toLowerCase().includes(query) ||
+        v.cliente.cedula.includes(query)
+    );
+    renderReception(filtered);
+}
+
+// Deprecated old functions (keeping helpers if needed, but UI replaced)
+async function checkPlaca(placa) {
+   // ... kept for modal internal logic if recycled
 }
 
 async function handleIngreso(e) {
@@ -473,3 +526,38 @@ async function handleCreateProduct(e) {
         }
     } catch(e) { showAlert('Error de red', 'Error'); }
 }
+
+async function handleEditProduct(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+    const id = data.id;
+    
+    try {
+        const res = await fetch(`${API_BASE}/inventario/editar/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        if(res.ok) {
+            showAlert('Producto actualizado', 'Éxito');
+            closeModal('modal-editar-producto');
+            fetchInventory().then(() => renderInventory(localInventory)); // Refresh
+        } else {
+            showAlert('Error al actualizar', 'Error');
+        }
+    } catch(e) { showAlert('Error de red', 'Error'); }
+}
+
+// Initial Load
+document.addEventListener('DOMContentLoaded', () => {
+    const activePanel = document.querySelector('.panel.active');
+    if(activePanel) {
+        const id = activePanel.id;
+        if(id === 'panel-recepcion') initReception();
+        if(id === 'panel-taller') refreshTaller();
+        if(id === 'panel-ventas') initPOS();
+        if(id === 'panel-caja') loadLiquidaciones();
+    }
+});

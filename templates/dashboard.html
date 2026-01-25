@@ -69,15 +69,22 @@
         <div id="panel-recepcion" class="panel active">
             <div class="panel-header">
                 <h1 class="panel-title">Recepción de Vehículos</h1>
-                <button class="btn btn-primary" onclick="openModal('modal-nuevo-ingreso')">Nuevo Ingreso</button>
             </div>
 
-            <div class="card">
-                <h3>Búsqueda Rápida</h3>
-                <div class="form-group" style="margin-top: 1rem;">
-                    <input type="text" id="busqueda-placa" placeholder="Buscar placa..."
-                        onkeyup="checkPlaca(this.value)">
-                    <div id="placa-resultado" style="margin-top: 0.5rem; font-size: 0.9rem;"></div>
+            <!-- Search Bar -->
+            <div class="card" style="margin-bottom: 2rem;">
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                        <input type="text" id="reception-search" placeholder="🔍 Buscar por placa, nombre o cédula..."
+                            onkeyup="filterReception(this.value)" style="font-size: 1.1rem; padding: 1rem;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid -->
+            <div>
+                <div id="reception-grid" class="inventory-grid">
+                    <!-- Filled by JS -->
                 </div>
             </div>
         </div>
