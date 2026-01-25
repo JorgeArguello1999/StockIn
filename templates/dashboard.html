@@ -189,59 +189,127 @@
 
     <!-- MODALS -->
 
-    <!-- Modal Nuevo Ingreso -->
+    <!-- Smart Modal Nuevo Ingreso -->
     <div id="modal-nuevo-ingreso" class="modal-overlay hidden">
-        <div class="modal">
+        <div class="modal" style="max-width: 600px;">
             <div class="modal-header">
-                <h3>Registrar Vehículo</h3>
-                <button class="close-modal" onclick="closeModal('modal-nuevo-ingreso')">&times;</button>
+                <h3>Nuevo Ingreso / Inspección</h3>
+                <button class="close-modal"
+                    onclick="closeModal('modal-nuevo-ingreso'); resetIngresoForm();">&times;</button>
             </div>
-            <form id="form-ingreso" onsubmit="handleIngreso(event)">
+
+            <!-- Step 1: Search Plate -->
+            <div id="step-search-plate">
                 <div class="form-group">
-                    <label>Placa</label>
-                    <input type="text" name="placa" required placeholder="ABC-123">
+                    <label>Ingrese Placa</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="ingreso-placa-search" placeholder="ABC-123"
+                            style="text-transform: uppercase;" onkeyup="if(event.key==='Enter') checkPlacaIngreso()">
+                        <button class="btn btn-primary" onclick="checkPlacaIngreso()">Buscar</button>
+                    </div>
                 </div>
-                <!-- Vehicle Info -->
-                <div class="form-group">
+            </div>
+
+            <!-- Step 2A: Found Vehicle -->
+            <div id="step-found-vehicle" class="hidden">
+                <div class="alert alert-success"
+                    style="margin-bottom: 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success-color); color: var(--success-color);">
+                    ✅ Vehículo Encontrado
+                </div>
+                <div
+                    style="background: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                    <h3 id="found-placa-display" style="margin:0;">ABC-123</h3>
+                    <div id="found-veh-details"
+                        style="font-size: 0.9rem; margin-top: 0.5rem; color: var(--text-secondary);">Toyota Corolla
+                    </div>
+                    <div id="found-owner-details" style="font-size: 0.9rem; color: var(--text-secondary);">Prop: Juan
+                        Perez</div>
+                </div>
+
+                <form onsubmit="handleOtCreation(event)">
+                    <input type="hidden" id="found-placa-input" name="placa">
+                    <div class="form-group">
+                        <label>Motivo de Ingreso / Síntomas</label>
+                        <textarea name="sintomas" class="form-control" rows="3" required
+                            placeholder="Descripción del trabajo a realizar..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Categoría</label>
+                        <select name="categoria_color"
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+                            <option value="Estándar">Estándar</option>
+                            <option value="Urgente">Urgente</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Generar Orden de Trabajo</button>
+                    <button type="button" class="btn btn-secondary btn-block" style="margin-top: 0.5rem;"
+                        onclick="resetIngresoForm()">Cancelar / Volver</button>
+                </form>
+            </div>
+
+            <!-- Step 2B: New Vehicle / Client -->
+            <div id="step-new-vehicle" class="hidden">
+                <div class="alert"
+                    style="margin-bottom: 1rem; background: rgba(59, 130, 246, 0.1); border: 1px solid var(--primary-color); color: var(--primary-color);">
+                    ℹ️ Vehículo Nuevo: Completar Registro
+                </div>
+
+                <form id="form-full-registro" onsubmit="handleFullRegistro(event)">
+                    <input type="hidden" id="new-placa-input" name="placa">
+
+                    <!-- Search Client Section -->
+                    <h4>Datos del Cliente</h4>
+                    <div class="form-group" style="position: relative;">
+                        <label>Buscar Cliente (Cédula o Nombre)</label>
+                        <input type="text" id="client-search-input" placeholder="Escriba para buscar..."
+                            onkeyup="debouncedClientSearch(this.value)" autocomplete="off">
+                        <div id="client-search-results" class="dropdown-results hidden"></div>
+                    </div>
+
+                    <!-- Client Fields (Auto-filled or Manual) -->
                     <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
-                        <div>
+                        <div class="form-group">
+                            <label>Nombre</label>
+                            <input type="text" id="new-cli-nombre" name="cliente_nombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Cédula</label>
+                            <input type="text" id="new-cli-cedula" name="cliente_cedula" required>
+                        </div>
+                    </div>
+                    <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="text" id="new-cli-telefono" name="cliente_telefono" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="new-cli-email" name="cliente_email">
+                        </div>
+                    </div>
+
+                    <h4>Datos del Vehículo (<span id="display-new-placa">---</span>)</h4>
+                    <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
+                        <div class="form-group">
                             <label>Marca</label>
                             <input type="text" name="marca" required placeholder="Toyota">
                         </div>
-                        <div>
+                        <div class="form-group">
                             <label>Modelo</label>
                             <input type="text" name="modelo" required placeholder="Corolla">
                         </div>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label>Cédula / RUC</label>
-                    <input type="text" name="cliente_cedula" required placeholder="Cédula del cliente">
-                </div>
-                <div class="form-group">
-                    <label>Nombre Cliente</label>
-                    <input type="text" name="cliente_nombre" required placeholder="Nombre completo">
-                </div>
-                <div class="form-group">
-                    <label>Teléfono</label>
-                    <input type="text" name="cliente_telefono" required placeholder="Celular/Teléfono">
-                </div>
-                <div class="form-group">
-                    <label>Dirección</label>
-                    <input type="text" name="cliente_direccion" placeholder="Dirección (Opcional)">
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" name="cliente_email" placeholder="Email (Opcional)">
-                </div>
-                <div class="form-group">
-                    <label>Defectos / Síntomas</label>
-                    <textarea name="sintomas" class="form-control" rows="3"></textarea>
-                </div>
-                <!-- Using hidden field or select for color/category if needed, hardcoding for MVP flow as it was not in UI before -->
-                <input type="hidden" name="categoria_color" value="Estándar">
-                <button type="submit" class="btn btn-primary btn-block">Registrar</button>
-            </form>
+
+                    <div class="form-group">
+                        <label>Motivo de Ingreso</label>
+                        <textarea name="sintomas" class="form-control" rows="2" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">Registrar y Crear Orden</button>
+                    <button type="button" class="btn btn-secondary btn-block" style="margin-top: 0.5rem;"
+                        onclick="resetIngresoForm()">Cancelar</button>
+                </form>
+            </div>
         </div>
     </div>
 

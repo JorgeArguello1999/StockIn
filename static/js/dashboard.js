@@ -124,16 +124,131 @@ function filterReception(query) {
     renderReception(filtered);
 }
 
-// Deprecated old functions (keeping helpers if needed, but UI replaced)
-async function checkPlaca(placa) {
-   // ... kept for modal internal logic if recycled
+// === SMART RECEPTION LOGIC ===
+
+function resetIngresoForm() {
+    document.getElementById('step-search-plate').classList.remove('hidden');
+    document.getElementById('step-found-vehicle').classList.add('hidden');
+    document.getElementById('step-new-vehicle').classList.add('hidden');
+    
+    document.getElementById('ingreso-placa-search').value = '';
+    document.getElementById('form-full-registro').reset();
+    document.getElementById('client-search-results').classList.add('hidden');
 }
 
-async function handleIngreso(e) {
+async function checkPlacaIngreso() {
+    const placa = document.getElementById('ingreso-placa-search').value.trim().toUpperCase();
+    if(!placa) return showAlert("Ingrese una placa", "Aviso");
+
+    try {
+        const res = await fetch(`${API_BASE}/registro/validar/${placa}`);
+        if (res.ok) {
+            // Found
+            const vehicle = await res.json();
+            showStepFound(vehicle);
+        } else {
+            // Not Found -> New
+            showStepNew(placa);
+        }
+    } catch(e) {
+        // Assume failure means network error, but 404 is handled by res.ok check above logically (validar returns 404 if not found)
+        // If fetch fails (network), show alert. If 404, valid logic handles it.
+         console.error(e); // If network error, might want to just assume new or retry
+         showAlert("Error verificando placa. Intente de nuevo.", "Error");
+    }
+}
+
+function showStepFound(vehicle) {
+    document.getElementById('step-search-plate').classList.add('hidden');
+    document.getElementById('step-found-vehicle').classList.remove('hidden');
+    
+    document.getElementById('found-placa-display').innerText = vehicle.placa;
+    document.getElementById('found-veh-details').innerText = `${vehicle.marca} ${vehicle.modelo}`;
+    document.getElementById('found-owner-details').innerText = `Prop: ${vehicle.cliente.nombre} (${vehicle.cliente.telefono})`;
+    
+    document.getElementById('found-placa-input').value = vehicle.placa;
+}
+
+function showStepNew(placa) {
+    document.getElementById('step-search-plate').classList.add('hidden');
+    document.getElementById('step-new-vehicle').classList.remove('hidden');
+    
+    document.getElementById('display-new-placa').innerText = placa;
+    document.getElementById('new-placa-input').value = placa;
+}
+
+// Client Autocomplete
+let clientSearchTimeout;
+function debouncedClientSearch(query) {
+    clearTimeout(clientSearchTimeout);
+    clientSearchTimeout = setTimeout(() => searchClients(query), 300);
+}
+
+async function searchClients(query) {
+    const resultsDiv = document.getElementById('client-search-results');
+    if(query.length < 2) {
+        resultsDiv.classList.add('hidden');
+        return;
+    }
+    
+    try {
+        const res = await fetch(`${API_BASE}/clientes/buscar?q=${query}`);
+        const clients = await res.json();
+        
+        resultsDiv.innerHTML = '';
+        if(clients.length > 0) {
+            resultsDiv.classList.remove('hidden');
+            clients.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'dropdown-item';
+                div.innerHTML = `<b>${c.nombre}</b> - ${c.cedula}`;
+                div.onclick = () => selectClient(c);
+                resultsDiv.appendChild(div);
+            });
+        } else {
+            resultsDiv.classList.add('hidden');
+        }
+    } catch(e) { console.error(e); }
+}
+
+function selectClient(c) {
+    document.getElementById('new-cli-nombre').value = c.nombre;
+    document.getElementById('new-cli-cedula').value = c.cedula;
+    document.getElementById('new-cli-telefono').value = c.telefono;
+    document.getElementById('new-cli-email').value = c.email || '';
+    
+    document.getElementById('client-search-results').classList.add('hidden');
+    document.getElementById('client-search-input').value = ''; // clear search
+}
+
+// Submits
+
+// 1. Existing Vehicle -> Only Create OT
+async function handleOtCreation(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
+    
+    // We reuse the registration create endpoint for simplicity effectively. 
+    // BUT 'procesar_registro' expects full data usually. 
+    // Let's modify the plan: We should check if 'procesar_registro' handles missing client data if vehicle exists.
+    // I checked the code for 'procesar_registro':
+    // It gets vehicle by placa. If vehicle exists, it sets cliente = vehiculo.propietario.
+    // It DOES NOT fail if client fields are missing in data IF vehicle exists.
+    // So we can send just {placa, sintomas, categoria} and it should work!
+    
+    submitRegistro(data);
+}
 
+// 2. New Vehicle -> Full Registration
+async function handleFullRegistro(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+    submitRegistro(data);
+}
+
+async function submitRegistro(data) {
     try {
         const response = await fetch(`${API_BASE}/registro/crear`, {
             method: 'POST',
@@ -143,13 +258,15 @@ async function handleIngreso(e) {
         const result = await response.json();
         
         if(response.ok) {
-            showAlert('Ingreso registrado con éxito', 'Éxito');
+            showAlert(`Orden #${result.numeroOT} creada exitosamente`, 'Éxito');
             closeModal('modal-nuevo-ingreso');
-            e.target.reset();
-            // Refresh reception grid
+            resetIngresoForm();
             fetchVehicles().then(() => renderReception(localVehicles));
+            // Also refresh Taller since a new OT was created
+            // If taller panel is active or will be visited
+            // We can't easy refresh taller from here if not active, but showPanel handles refresh.
         } else {
-            showAlert('Error: ' + result.error, 'Error');
+            showAlert('Error: ' + (result.error || result.mensaje), 'Error');
         }
     } catch(err) {
         showAlert('Error de conexión', 'Error');

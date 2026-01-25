@@ -152,3 +152,28 @@ def editar_vehiculo(placa, data):
     except Exception as e:
         db.session.rollback()
         raise e
+    except Exception as e:
+        db.session.rollback()
+        raise e
+
+def buscar_clientes(query):
+    """
+    Search clients by name, cedula, or phone.
+    Returns list of dicts.
+    """
+    # Use ILIKE for case-insensitive search if supported (sqlite uses LIKE case-insensitive by default for ASCII, but usually LIKE is fine)
+    search = f"%{query}%"
+    clientes = Cliente.query.filter(
+        (Cliente.nombre.like(search)) | 
+        (Cliente.cedula.like(search)) |
+        (Cliente.telefono.like(search))
+    ).limit(10).all()
+    
+    return [{
+        "id": c.id_cliente,
+        "nombre": c.nombre,
+        "cedula": c.cedula,
+        "telefono": c.telefono,
+        "email": c.email,
+        "direccion": c.direccion
+    } for c in clientes]
