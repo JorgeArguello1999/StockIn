@@ -6,7 +6,8 @@ def create_app():
     app = Flask(__name__)
     
     # Configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///stockin.db'
+    import os
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI', 'sqlite:///stockin.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'
 
