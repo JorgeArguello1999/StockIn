@@ -79,6 +79,9 @@ function renderReception(list) {
                     <div>🆔 ${v.cliente.cedula}</div>
                     <div>📞 ${v.cliente.telefono}</div>
                 </div>
+                <div style="margin-top: 1rem; text-align: right;">
+                    <button class="btn btn-sm btn-danger" onclick="handleDeleteVehicle('${v.placa}')">🗑️ Eliminar</button>
+                </div>
             </div>
         `;
         grid.appendChild(card);
@@ -114,14 +117,16 @@ async function handleIngreso(e) {
         const result = await response.json();
         
         if(response.ok) {
-            alert('Ingreso registrado con éxito');
+            showAlert('Ingreso registrado con éxito', 'Éxito');
             closeModal('modal-nuevo-ingreso');
             e.target.reset();
+            // Refresh reception grid
+            fetchVehicles().then(() => renderReception(localVehicles));
         } else {
-            alert('Error: ' + result.error);
+            showAlert('Error: ' + result.error, 'Error');
         }
     } catch(err) {
-        alert('Error de conexión');
+        showAlert('Error de conexión', 'Error');
     }
 }
 
@@ -275,6 +280,10 @@ function renderInventory(items) {
     items.forEach(item => {
         const card = document.createElement('div');
         card.className = 'inventory-card';
+        // Stock Validation
+        const isOutOfStock = item.stock <= 0;
+        if (isOutOfStock) card.classList.add('out-of-stock');
+        
         // Placeholder handling
         const imgSrc = item.foto_url && item.foto_url.trim() !== '' ? item.foto_url : 'https://placehold.co/200x120?text=No+Image';
         
@@ -299,10 +308,11 @@ function renderInventory(items) {
 
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span style="font-size:0.8rem; color:var(--text-secondary);">Stock: <b id="stock-${item.id}">${item.stock}</b></span>
+                    <button class="btn btn-sm btn-danger" style="padding: 2px 6px; font-size: 0.8rem;" onclick="handleDeleteProduct(${item.id})">🗑️</button>
                 </div>
 
-                <button class="btn btn-primary btn-sm" style="margin-top: 1rem;" onclick="addToCartItem(${item.id}, '${item.nombre}', ${item.precio})">
-                    Agregar 🛒
+                <button class="btn btn-primary btn-sm" style="margin-top: 1rem;" onclick="addToCartItem(${item.id}, '${item.nombre}', ${item.precio}, ${item.stock})" ${isOutOfStock ? 'disabled style="cursor:not-allowed; background:var(--text-secondary)"' : ''}>
+                    ${isOutOfStock ? 'Agotado' : 'Agregar 🛒'}
                 </button>
             </div>
         `;
@@ -330,6 +340,7 @@ function openEditModal(item) {
     document.getElementById('edit-nombre').value = item.nombre;
     document.getElementById('edit-descripcion').value = item.descripcion || '';
     document.getElementById('edit-precio').value = item.precio;
+    document.getElementById('edit-stock').value = item.stock;
     document.getElementById('edit-unidad').value = item.unidad || 'unidad';
     document.getElementById('edit-foto').value = item.foto_url || '';
     
@@ -371,14 +382,27 @@ function filterInventory(query) {
 
 // Quick Stock Update
 async function updateStock(id, delta) {
-    // Optimistic UI update
     const stockEl = document.getElementById(`stock-${id}`);
     const current = parseInt(stockEl.innerText);
+    
+    // Prevent negative stock
+    if (current + delta < 0) {
+        showAlert("No se puede reducir el stock por debajo de 0.", "Stock Inválido");
+        return;
+    }
+
+    // Optimistic UI update
     stockEl.innerText = current + delta;
     
     // Update local state
     const item = localInventory.find(i => i.id === id);
-    if(item) item.stock += delta;
+    if(item) {
+        item.stock += delta;
+        // Re-render if it hits 0 or comes back from 0 to update buttons
+        if(item.stock === 0 || (item.stock === 1 && delta > 0)) {
+             renderInventory(localInventory); // Refresh UI state
+        }
+    }
 
     try {
         await fetch(`${API_BASE}/inventario/stock`, {
@@ -390,8 +414,17 @@ async function updateStock(id, delta) {
 }
 
 // Cart Logic
-function addToCartItem(id, nombre, precio) {
+// Updated signature to include currentStock
+function addToCartItem(id, nombre, precio, currentStock) {
+    // Check if item is already in cart using more than available
     const existing = carrito.find(i => i.id_producto === id);
+    const inCart = existing ? existing.cantidad : 0;
+    
+    if (inCart + 1 > currentStock) {
+        showAlert("No hay suficiente stock disponible.", "Aviso");
+        return;
+    }
+
     if(existing) {
         existing.cantidad++;
     } else {
@@ -521,6 +554,8 @@ async function handleCreateProduct(e) {
             showAlert(`Producto creado: ${result.nombre} (ID: ${result.id})`, 'Éxito');
             closeModal('modal-crear-producto');
             e.target.reset();
+            // Refresh inventory
+            fetchInventory().then(() => renderInventory(localInventory));
         } else {
             showAlert('Error: ' + result.error, 'Error');
         }
@@ -561,3 +596,34 @@ document.addEventListener('DOMContentLoaded', () => {
         if(id === 'panel-caja') loadLiquidaciones();
     }
 });
+
+// Delete Handlers
+async function handleDeleteProduct(id) {
+    if(!confirm('¿Estás seguro de eliminar este producto?')) return;
+    try {
+        const res = await fetch(`${API_BASE}/inventario/eliminar/${id}`, {method: 'DELETE'});
+        const result = await res.json();
+        
+        if(res.ok) {
+            showAlert(result.mensaje || 'Eliminado', 'Éxito');
+            fetchInventory().then(() => renderInventory(localInventory));
+        } else {
+            showAlert(result.error || 'Error al eliminar', 'Error');
+        }
+    } catch(e) { showAlert('Error de red', 'Error'); }
+}
+
+async function handleDeleteVehicle(placa) {
+    if(!confirm('¿Estás seguro de eliminar este vehículo?')) return;
+    try {
+        const res = await fetch(`${API_BASE}/registro/eliminar/${placa}`, {method: 'DELETE'});
+        const result = await res.json();
+        
+        if(res.ok) {
+            showAlert(result.mensaje || 'Eliminado', 'Éxito');
+            fetchVehicles().then(() => renderReception(localVehicles));
+        } else {
+            showAlert(result.error || 'Error al eliminar', 'Error');
+        }
+    } catch(e) { showAlert('Error de red', 'Error'); }
+}

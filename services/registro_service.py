@@ -97,3 +97,22 @@ def listar_vehiculos():
             "telefono": v.propietario.telefono
         }
     } for v in vehiculos]
+
+def eliminar_vehiculo(placa):
+    """
+    Deletes a vehicle.
+    Returns: (bool, message)
+    """
+    try:
+        vehiculo = Vehiculo.query.get(placa)
+        if not vehiculo:
+            return False, "Vehículo no encontrado"
+        
+        db.session.delete(vehiculo)
+        db.session.commit()
+        return True, "Vehículo eliminado"
+    except Exception as e:
+        db.session.rollback()
+        if "foreign key constraint" in str(e).lower():
+            return False, "No se puede eliminar: tiene órdenes de trabajo asociadas."
+        return False, str(e)

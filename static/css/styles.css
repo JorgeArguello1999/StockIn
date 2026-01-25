@@ -484,3 +484,8 @@ svg[id^="barcode-"] {
     height: auto;
 }
 
+.out-of-stock {
+    opacity: 0.6;
+    filter: grayscale(100%);
+}
+

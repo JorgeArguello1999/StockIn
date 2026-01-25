@@ -65,6 +65,7 @@ def editar_producto(id_producto, data):
         if 'nombre' in data: producto.nombre = data['nombre']
         if 'descripcion' in data: producto.descripcion = data['descripcion']
         if 'precio' in data: producto.precio = float(data['precio'])
+        if 'stock' in data: producto.stock_actual = int(data['stock'])
         if 'unidad_medida' in data: producto.unidad_medida = data['unidad_medida']
         if 'foto_url' in data: producto.foto_url = data['foto_url']
         
@@ -73,3 +74,23 @@ def editar_producto(id_producto, data):
     except Exception as e:
         db.session.rollback()
         raise e
+
+def eliminar_producto(id_producto):
+    """
+    Deletes a product.
+    Returns: (bool, message)
+    """
+    try:
+        producto = Inventario.query.get(id_producto)
+        if not producto:
+            return False, "Producto no encontrado"
+        
+        db.session.delete(producto)
+        db.session.commit()
+        return True, "Producto eliminado"
+    except Exception as e:
+        db.session.rollback()
+        # Check for constraint error (e.g. linked to sales)
+        if "foreign key constraint" in str(e).lower():
+            return False, "No se puede eliminar: el producto tiene ventas o movimientos asociados."
+        return False, str(e)

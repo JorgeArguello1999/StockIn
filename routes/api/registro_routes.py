@@ -11,6 +11,17 @@ def list_vehicles():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@registro_api.route('/eliminar/<placa>', methods=['DELETE'])
+def delete_vehicle_endpoint(placa):
+    try:
+        from services.registro_service import eliminar_vehiculo
+        success, msg = eliminar_vehiculo(placa)
+        if not success:
+            return jsonify({"error": msg}), 400
+        return jsonify({"mensaje": msg}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @registro_api.route('/validar/<placa>', methods=['GET'])
 def check_vehicle(placa):
     result = validar_vehiculo(placa)

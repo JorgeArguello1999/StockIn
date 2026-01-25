@@ -58,3 +58,14 @@ def edit_product_endpoint(id_prod):
         return jsonify({"mensaje": msg}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@inventory_api.route('/eliminar/<int:id_prod>', methods=['DELETE'])
+def delete_product_endpoint(id_prod):
+    try:
+        from services.inventory_service import eliminar_producto
+        success, msg = eliminar_producto(id_prod)
+        if not success:
+            return jsonify({"error": msg}), 400
+        return jsonify({"mensaje": msg}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
