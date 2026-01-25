@@ -6,7 +6,7 @@ class Factura(db.Model):
     orden_id = db.Column(db.Integer, db.ForeignKey('orden_trabajo.numeroOT'), nullable=True)
     venta_id = db.Column(db.Integer, db.ForeignKey('venta.id_venta'), nullable=True)
     cliente_id = db.Column(db.Integer, db.ForeignKey('cliente.id_cliente'), nullable=False)
-    fecha_emision = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_emision = db.Column(db.DateTime, default=datetime.now)
     total_final = db.Column(db.Float, nullable=False)
     metodo_pago = db.Column(db.String(50), nullable=True)
 

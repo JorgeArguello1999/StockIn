@@ -266,6 +266,8 @@ body {
     border-radius: var(--radius-lg);
     padding: 1rem;
     border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
 }
 
 .kanban-header {
@@ -374,4 +376,215 @@ th {
     color: var(--text-secondary);
     cursor: pointer;
     font-size: 1.5rem;
+}
+
+
+/* Inventory Grid & Cards */
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.inventory-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.inventory-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+.inventory-card-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-style: dashed;
+    border-width: 2px;
+    background-color: rgba(59, 130, 246, 0.05); /* very light blue */
+}
+
+.inventory-card-add:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.inv-img {
+    height: 120px;
+    background-color: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.inv-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.inv-body {
+    padding: 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.inv-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    font-size: 0.95rem;
+}
+
+.inv-meta {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.inv-price {
+    font-weight: 700;
+    color: var(--success-color);
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.inv-stock-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: auto;
+    background: rgba(0,0,0,0.2);
+    padding: 4px;
+    border-radius: 4px;
+    justify-content: center;
+}
+
+.inv-stock-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    background: var(--text-secondary);
+    color: var(--bg-color);
+    font-weight: bold;
+}
+.inv-stock-btn:hover { opacity: 0.8; }
+
+svg[id^="barcode-"] {
+    max-width: 100%;
+    height: auto;
+}
+
+.out-of-stock {
+    opacity: 0.6;
+    filter: grayscale(100%);
+}
+
+.out-of-stock {
+    opacity: 0.6;
+    filter: grayscale(100%);
+}
+
+.dropdown-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+    padding: 0.75rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dropdown-item:hover {
+    background: var(--bg-primary);
+}
+
+/* Scrollable Selection Grid */
+.scrollable-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.repuesto-select-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.5rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.repuesto-select-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.repuesto-select-card.selected {
+    border: 2px solid var(--primary-color);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.repuesto-select-card img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+/* Badges */
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: white;
+}
+.badge.warning { background-color: #f59e0b; color: black; }
+.badge.primary { background-color: var(--primary-color); }
+.badge.success { background-color: var(--success-color); }
+
+.ot-barcodes {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+.ot-barcodes div {
+    text-align: center;
+}
+.ot-barcodes svg {
+    max-width: 100px;
+    height: 40px;
 }

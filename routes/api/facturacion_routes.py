@@ -1,7 +1,24 @@
 from flask import Blueprint, request, jsonify
-from services.facturacion_service import pre_liquidar_ot, generar_factura_final
+from services.facturacion_service import pre_liquidar_ot, generar_factura_final, listar_ordenes_pendientes_pago, listar_facturas
 
 facturacion_api = Blueprint('facturacion_api', __name__, url_prefix='/api/facturacion')
+
+@facturacion_api.route('/historial', methods=['GET'])
+def list_history():
+    query = request.args.get('q')
+    try:
+        facturas = listar_facturas(query)
+        return jsonify(facturas), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@facturacion_api.route('/pendientes', methods=['GET'])
+def list_pending_invoices():
+    try:
+        ordenes = listar_ordenes_pendientes_pago()
+        return jsonify(ordenes), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @facturacion_api.route('/pre-liquidar/<int:ot_id>', methods=['GET'])
 def get_pre_bill(ot_id):
@@ -29,5 +46,20 @@ def generate_invoice(ot_id):
             "nro_factura": factura.nro_factura, 
             "total": factura.total_final
         }), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@facturacion_api.route('/regenerar/<int:factura_id>', methods=['POST'])
+def regenerate_pdf(factura_id):
+    from models.invoice import Factura
+    from services.pdf_service import generar_pdf_factura
+    
+    try:
+        factura = Factura.query.get(factura_id)
+        if not factura:
+            return jsonify({"error": "Factura no encontrada"}), 404
+            
+        pdf_path = generar_pdf_factura(factura)
+        return jsonify({"mensaje": "PDF Regenerado", "url": "/" + pdf_path}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -7,6 +7,7 @@
     <title>StockIn - Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body class="dashboard-layout">
@@ -27,7 +28,14 @@
         <ul class="nav-links">
             {% if user.role == 'admin' %}
             <li class="nav-item">
-                <button class="nav-btn active" onclick="showPanel('panel-recepcion', this)">
+                <button class="nav-btn active" onclick="showPanel('panel-inicio', this)">
+                    🏠 Inicio
+                </button>
+            </li>
+            {% endif %}
+            {% if user.role == 'admin' %}
+            <li class="nav-item">
+                <button class="nav-btn" onclick="showPanel('panel-recepcion', this)">
                     📋 Recepción
                 </button>
             </li>
@@ -51,6 +59,11 @@
                     💰 Caja
                 </button>
             </li>
+            <li class="nav-item">
+                <button class="nav-btn" onclick="showPanel('panel-facturas', this)">
+                    📑 Facturas
+                </button>
+            </li>
             {% endif %}
         </ul>
 
@@ -64,20 +77,71 @@
     <!-- Main Content -->
     <main id="main-content" class="main-content">
 
-        <!-- === PANEL RECEPCIÓN (ADMIN) === -->
-        {% if user.role == 'admin' %}
-        <div id="panel-recepcion" class="panel active">
+        <!-- === PANEL INICIO (TODOS) === -->
+        <div id="panel-inicio" class="panel {% if user.role == 'admin' %}active{% endif %}">
             <div class="panel-header">
-                <h1 class="panel-title">Recepción de Vehículos</h1>
-                <button class="btn btn-primary" onclick="openModal('modal-nuevo-ingreso')">Nuevo Ingreso</button>
+                <h1 class="panel-title">Resumen del Negocio</h1>
+                <button class="btn btn-primary btn-sm" onclick="loadDashboardMetrics()">🔄 Actualizar</button>
             </div>
 
-            <div class="card">
-                <h3>Búsqueda Rápida</h3>
-                <div class="form-group" style="margin-top: 1rem;">
-                    <input type="text" id="busqueda-placa" placeholder="Buscar placa..."
-                        onkeyup="checkPlaca(this.value)">
-                    <div id="placa-resultado" style="margin-top: 0.5rem; font-size: 0.9rem;"></div>
+            <!-- Stats Row -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div class="card" style="text-align: center;">
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Ventas Hoy</div>
+                    <div id="stat-ventas-hoy" style="font-size: 2rem; font-weight: 700; color: var(--success-color);">
+                        $0.00</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Ventas Mes</div>
+                    <div id="stat-ventas-mes" style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">
+                        $0.00</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">Órdenes Activas</div>
+                    <div id="stat-ordenes-activas"
+                        style="font-size: 2rem; font-weight: 700; color: var(--warning-color);">0</div>
+                </div>
+            </div>
+
+            <!-- Charts & Alerts Row -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                <div class="card">
+                    <h3>Tendencia de Ventas (7 Días)</h3>
+                    <div style="height: 300px;">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>⚠️ Alerta Stock Bajo</h3>
+                    <ul id="low-stock-list" style="list-style: none; padding: 0; margin-top: 1rem;">
+                        <li style="color: var(--text-secondary); text-align: center;">Cargando...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- === PANEL RECEPCIÓN (ADMIN) === -->
+        {% if user.role == 'admin' %}
+        <div id="panel-recepcion" class="panel">
+            <div class="panel-header">
+                <h1 class="panel-title">Recepción de Vehículos</h1>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="card" style="margin-bottom: 2rem;">
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                        <input type="text" id="reception-search" placeholder="🔍 Buscar por placa, nombre o cédula..."
+                            onkeyup="filterReception(this.value)" style="font-size: 1.1rem; padding: 1rem;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid -->
+            <div>
+                <div id="reception-grid" class="inventory-grid">
+                    <!-- Filled by JS -->
                 </div>
             </div>
         </div>
@@ -111,30 +175,42 @@
         {% if user.role == 'admin' %}
         <div id="panel-ventas" class="panel">
             <div class="panel-header">
-                <h1 class="panel-title">Punto de Venta</h1>
+                <h1 class="panel-title">Punto de Venta e Inventario</h1>
             </div>
 
-            <div class="grid grid-2">
-                <div class="card">
-                    <h3>Agregar Producto</h3>
-                    <!-- Simple form for demo purposes -->
-                    <div class="form-group">
-                        <label>ID Producto</label>
-                        <input type="number" id="pos-prod-id">
+            <!-- Search Bar -->
+            <div class="card" style="margin-bottom: 2rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <input type="text" id="inventory-search" placeholder="🔍 Buscar por nombre o código..."
+                        onkeyup="filterInventory(this.value)" style="font-size: 1.1rem; padding: 1rem;">
+                </div>
+            </div>
+
+            <!-- Main Layout with Sidebar Cart -->
+            <div style="display: grid; grid-template-columns: 1fr 350px; gap: 2rem;">
+
+                <!-- Inventory Grid -->
+                <div>
+                    <div id="inventory-grid" class="inventory-grid">
+                        <!-- Filled by JS -->
                     </div>
-                    <div class="form-group">
-                        <label>Cantidad</label>
-                        <input type="number" id="pos-cantidad" value="1">
-                    </div>
-                    <button class="btn btn-primary btn-block" onclick="addToCart()">Agregar al Carrito</button>
                 </div>
 
-                <div class="card">
-                    <h3>Carrito</h3>
-                    <div id="pos-cart" style="min-height: 100px; margin-bottom: 1rem;">
-                        <p style="color: var(--text-secondary);">Carrito vacío</p>
+                <!-- Sticky Cart -->
+                <div class="card" style="height: fit-content; position: sticky; top: 1rem;">
+                    <h3>🛒 Carrito</h3>
+                    <div id="pos-cart"
+                        style="min-height: 200px; margin: 1rem 0; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                        <p style="color: var(--text-secondary); text-align: center;">Carrito vacío</p>
                     </div>
-                    <button class="btn btn-success btn-block" onclick="processSale()">Confirmar Venta</button>
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: auto;">
+                        <div
+                            style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 1rem;">
+                            <span>Total:</span>
+                            <span id="cart-total">$0.00</span>
+                        </div>
+                        <button class="btn btn-success btn-block" onclick="processSale()">Confirmar Venta</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -164,90 +240,491 @@
                 </table>
             </div>
         </div>
+
+        <!-- === PANEL FACTURAS (ADMIN) === -->
+        <div id="panel-facturas" class="panel">
+            <div class="panel-header">
+                <h1 class="panel-title">Historial de Facturas</h1>
+                <button class="btn btn-primary btn-sm" onclick="loadFacturas()">🔄 Refresh</button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="card" style="margin-bottom: 2rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <input type="text" id="facturas-search" placeholder="🔍 Buscar por cliente, cédula o número..."
+                        onkeyup="filterFacturas(this.value)" style="font-size: 1.1rem; padding: 1rem;">
+                </div>
+            </div>
+
+            <div class="card">
+                <table style="width:100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="text-align:left; border-bottom: 2px solid var(--border-color);">
+                            <th style="padding:1rem;">Nro</th>
+                            <th style="padding:1rem;">Fecha</th>
+                            <th style="padding:1rem;">Cliente</th>
+                            <th style="padding:1rem;">Cédula</th>
+                            <th style="padding:1rem;">Tipo</th>
+                            <th style="padding:1rem;">Total</th>
+                            <th style="padding:1rem;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-facturas">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
         {% endif %}
 
     </main>
 
     <!-- MODALS -->
 
-    <!-- Modal Nuevo Ingreso -->
+    <!-- Smart Modal Nuevo Ingreso -->
     <div id="modal-nuevo-ingreso" class="modal-overlay hidden">
-        <div class="modal">
+        <div class="modal" style="max-width: 600px;">
             <div class="modal-header">
-                <h3>Registrar Vehículo</h3>
-                <button class="close-modal" onclick="closeModal('modal-nuevo-ingreso')">&times;</button>
+                <h3>Nuevo Ingreso / Inspección</h3>
+                <button class="close-modal"
+                    onclick="closeModal('modal-nuevo-ingreso'); resetIngresoForm();">&times;</button>
             </div>
-            <form id="form-ingreso" onsubmit="handleIngreso(event)">
+
+            <!-- Step 1: Search Plate -->
+            <div id="step-search-plate">
                 <div class="form-group">
-                    <label>Placa</label>
-                    <input type="text" name="placa" required placeholder="ABC-123">
+                    <label>Ingrese Placa</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="ingreso-placa-search" placeholder="ABC-123"
+                            style="text-transform: uppercase;" onkeyup="if(event.key==='Enter') checkPlacaIngreso()">
+                        <button class="btn btn-primary" onclick="checkPlacaIngreso()">Buscar</button>
+                    </div>
                 </div>
-                <!-- Vehicle Info -->
-                <div class="form-group">
+            </div>
+
+            <!-- Step 2A: Found Vehicle -->
+            <div id="step-found-vehicle" class="hidden">
+                <div class="alert alert-success"
+                    style="margin-bottom: 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success-color); color: var(--success-color);">
+                    ✅ Vehículo Encontrado
+                </div>
+                <div
+                    style="background: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                    <h3 id="found-placa-display" style="margin:0;">ABC-123</h3>
+                    <div id="found-veh-details"
+                        style="font-size: 0.9rem; margin-top: 0.5rem; color: var(--text-secondary);">Toyota Corolla
+                    </div>
+                    <div id="found-owner-details" style="font-size: 0.9rem; color: var(--text-secondary);">Prop: Juan
+                        Perez</div>
+                </div>
+
+                <form onsubmit="handleOtCreation(event)">
+                    <input type="hidden" id="found-placa-input" name="placa">
+                    <div class="form-group">
+                        <label>Motivo de Ingreso / Síntomas</label>
+                        <textarea name="sintomas" class="form-control" rows="3" required
+                            placeholder="Descripción del trabajo a realizar..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Categoría</label>
+                        <select name="categoria_color"
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+                            <option value="Estándar">Estándar</option>
+                            <option value="Urgente">Urgente</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Generar Orden de Trabajo</button>
+                    <button type="button" class="btn btn-secondary btn-block" style="margin-top: 0.5rem;"
+                        onclick="resetIngresoForm()">Cancelar / Volver</button>
+                </form>
+            </div>
+
+            <!-- Step 2B: New Vehicle / Client -->
+            <div id="step-new-vehicle" class="hidden">
+                <div class="alert"
+                    style="margin-bottom: 1rem; background: rgba(59, 130, 246, 0.1); border: 1px solid var(--primary-color); color: var(--primary-color);">
+                    ℹ️ Vehículo Nuevo: Completar Registro
+                </div>
+
+                <form id="form-full-registro" onsubmit="handleFullRegistro(event)">
+                    <input type="hidden" id="new-placa-input" name="placa">
+
+                    <!-- Search Client Section -->
+                    <h4>Datos del Cliente</h4>
+                    <div class="form-group" style="position: relative;">
+                        <label>Buscar Cliente (Cédula o Nombre)</label>
+                        <input type="text" id="client-search-input" placeholder="Escriba para buscar..."
+                            onkeyup="debouncedClientSearch(this.value)" autocomplete="off">
+                        <div id="client-search-results" class="dropdown-results hidden"></div>
+                    </div>
+
+                    <!-- Client Fields (Auto-filled or Manual) -->
                     <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
-                        <div>
+                        <div class="form-group">
+                            <label>Nombre</label>
+                            <input type="text" id="new-cli-nombre" name="cliente_nombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Cédula</label>
+                            <input type="text" id="new-cli-cedula" name="cliente_cedula" required>
+                        </div>
+                    </div>
+                    <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="text" id="new-cli-telefono" name="cliente_telefono" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="new-cli-email" name="cliente_email">
+                        </div>
+                    </div>
+
+                    <h4>Datos del Vehículo (<span id="display-new-placa">---</span>)</h4>
+                    <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
+                        <div class="form-group">
                             <label>Marca</label>
                             <input type="text" name="marca" required placeholder="Toyota">
                         </div>
-                        <div>
+                        <div class="form-group">
                             <label>Modelo</label>
                             <input type="text" name="modelo" required placeholder="Corolla">
                         </div>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label>Cédula / RUC</label>
-                    <input type="text" name="cliente_cedula" required placeholder="Cédula del cliente">
-                </div>
-                <div class="form-group">
-                    <label>Nombre Cliente</label>
-                    <input type="text" name="cliente_nombre" required placeholder="Nombre completo">
-                </div>
-                <div class="form-group">
-                    <label>Teléfono</label>
-                    <input type="text" name="cliente_telefono" required placeholder="Celular/Teléfono">
-                </div>
-                <div class="form-group">
-                    <label>Dirección</label>
-                    <input type="text" name="cliente_direccion" placeholder="Dirección (Opcional)">
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" name="cliente_email" placeholder="Email (Opcional)">
-                </div>
-                <div class="form-group">
-                    <label>Defectos / Síntomas</label>
-                    <textarea name="sintomas" class="form-control" rows="3"></textarea>
-                </div>
-                <!-- Using hidden field or select for color/category if needed, hardcoding for MVP flow as it was not in UI before -->
-                <input type="hidden" name="categoria_color" value="Estándar">
-                <button type="submit" class="btn btn-primary btn-block">Registrar</button>
-            </form>
+
+                    <div class="form-group">
+                        <label>Motivo de Ingreso</label>
+                        <textarea name="sintomas" class="form-control" rows="2" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">Registrar y Crear Orden</button>
+                    <button type="button" class="btn btn-secondary btn-block" style="margin-top: 0.5rem;"
+                        onclick="resetIngresoForm()">Cancelar</button>
+                </form>
+            </div>
         </div>
     </div>
 
     <!-- Modal Agregar Repuesto (Taller) -->
     <div id="modal-repuesto" class="modal-overlay hidden">
-        <div class="modal">
+        <div class="modal" style="max-width: 600px;">
             <div class="modal-header">
                 <h3>Solicitar Repuesto</h3>
                 <button class="close-modal" onclick="closeModal('modal-repuesto')">&times;</button>
             </div>
-            <form id="form-repuesto" onsubmit="handleAddRepuesto(event)">
+
+            <div class="form-group">
+                <input type="text" id="repuesto-search" placeholder="🔍 Buscar repuesto..."
+                    onkeyup="filterRepuestoGrid(this.value)" style="padding: 0.75rem;">
+            </div>
+
+            <div id="repuesto-selection-grid" class="scrollable-grid">
+                <!-- Populated by JS -->
+            </div>
+
+            <form id="form-repuesto" onsubmit="handleAddRepuesto(event)"
+                style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
                 <input type="hidden" id="repuesto-ot-id" name="ot_id">
-                <div class="form-group">
-                    <label>ID Producto</label>
-                    <input type="number" name="producto_id" required>
+                <div id="selected-repuesto-info" class="hidden"
+                    style="margin-bottom: 1rem; padding: 0.5rem; background: var(--bg-primary); border-radius: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div id="sel-rep-name" style="font-weight: 600;">Nombre</div>
+                        <div id="sel-rep-price" style="font-size: 0.9rem; color: var(--success-color);">$0.00</div>
+                    </div>
+                    <input type="hidden" id="sel-rep-id" name="producto_id" required>
                 </div>
+
                 <div class="form-group">
                     <label>Cantidad</label>
-                    <input type="number" name="cantidad" value="1" required>
+                    <input type="number" name="cantidad" value="1" min="1" required style="width: 100px;">
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">Agregar a Orden</button>
+                <button type="submit" id="btn-add-repuesto" class="btn btn-primary btn-block" disabled>Agregar a
+                    Orden</button>
             </form>
         </div>
     </div>
 
+    <!-- Modal Crear Producto (POS) -->
+    <div id="modal-crear-producto" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Crear Nuevo Producto</h3>
+                <button class="close-modal" onclick="closeModal('modal-crear-producto')">&times;</button>
+            </div>
+            <form id="form-crear-producto" onsubmit="handleCreateProduct(event)">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" name="nombre" required placeholder="Ej: Aceite 5W30">
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <input type="text" name="descripcion" placeholder="Detalles del producto">
+                </div>
+                <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label>Precio ($)</label>
+                        <input type="number" step="0.01" name="precio" required placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Stock Inicial</label>
+                        <input type="number" name="stock_inicial" required value="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Unidad de Medida</label>
+                    <select name="unidad_medida"
+                        style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+                        <option value="unidad">Unidad</option>
+                        <option value="litro">Litro</option>
+                        <option value="galon">Galón</option>
+                        <option value="kit">Kit</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Foto URL</label>
+                    <input type="url" name="foto_url" placeholder="https://...">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Guardar Producto</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Producto (POS) -->
+    <div id="modal-editar-producto" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Editar Producto</h3>
+                <button class="close-modal" onclick="closeModal('modal-editar-producto')">&times;</button>
+            </div>
+            <form id="form-editar-producto" onsubmit="handleEditProduct(event)">
+                <input type="hidden" id="edit-prod-id" name="id">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="edit-nombre" name="nombre" required>
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <input type="text" id="edit-descripcion" name="descripcion">
+                </div>
+                <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label>Precio ($)</label>
+                        <input type="number" step="0.01" id="edit-precio" name="precio" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Stock Actual</label>
+                        <input type="number" id="edit-stock" name="stock" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Unidad de Medida</label>
+                        <select id="edit-unidad" name="unidad_medida"
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+                            <option value="unidad">Unidad</option>
+                            <option value="litro">Litro</option>
+                            <option value="galon">Galón</option>
+                            <option value="kit">Kit</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Foto URL</label>
+                    <input type="url" id="edit-foto" name="foto_url">
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button type="button" class="btn btn-danger btn-block"
+                        onclick="deleteFromEditModal()">Eliminar</button>
+                    <button type="submit" class="btn btn-primary btn-block">Actualizar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Vehicle Detail & History Modal -->
+    <div id="modal-detalle-vehiculo" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>Detalles del Vehículo</h3>
+                <button class="close-modal" onclick="closeModal('modal-detalle-vehiculo')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 id="detail-placa" style="color: var(--primary-color);">ABC-123</h2>
+                    <button class="btn btn-secondary" onclick="toggleVehicleEdit()">Editar Datos</button>
+                    <button id="btn-save-vehicle" class="btn btn-success hidden" onclick="saveVehicleChanges()">Guardar
+                        Cambios</button>
+                </div>
+
+                <form id="form-detalle-vehiculo">
+                    <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
+                        <div class="form-group">
+                            <label>Marca</label>
+                            <input type="text" id="det-marca" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Modelo</label>
+                            <input type="text" id="det-modelo" disabled>
+                        </div>
+                    </div>
+                    <h4>Propietario</h4>
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="det-nombre" disabled>
+                    </div>
+                    <div class="grid grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Cédula</label>
+                            <input type="text" id="det-cedula" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="text" id="det-telefono" disabled>
+                        </div>
+                    </div>
+                    <div class="grid grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Dirección</label>
+                            <input type="text" id="det-direccion" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="det-email" disabled>
+                        </div>
+                    </div>
+                </form>
+
+                <hr style="margin: 2rem 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                <h3>Historial de Servicios / Facturas</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID Orden</th>
+                                <th>Fecha</th>
+                                <th>Detalle</th>
+                                <th>Estado</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vehicle-history-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Repuestos/Detalles Orden -->
+    <div id="modal-ot-detalles" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Detalles de Orden de Trabajo</h3>
+                <button class="close-modal" onclick="closeModal('modal-ot-detalles')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4>Repuestos Asignados</h4>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cant</th>
+                                <th>Precio</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ot-detalles-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+    <!-- Modal Tipo Factura (POS) -->
+    <div id="modal-tipo-factura" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 500px; text-align: center;">
+            <h3>Seleccione Tipo de Factura</h3>
+            <div style="margin: 2rem 0; display: flex; gap: 1rem; justify-content: center;">
+                <button class="btn btn-primary" onclick="submitSaleGeneric()"
+                    style="padding: 1rem 2rem; font-size: 1.1rem;">
+                    👤 Consumidor Final
+                </button>
+                <button class="btn btn-secondary" onclick="openDatosFactura()"
+                    style="padding: 1rem 2rem; font-size: 1.1rem;">
+                    📝 Factura con Datos
+                </button>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="closeModal('modal-tipo-factura')">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Modal Datos Factura (POS) -->
+    <div id="modal-datos-factura" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Datos de Facturación</h3>
+                <button class="close-modal" onclick="closeModal('modal-datos-factura')">&times;</button>
+            </div>
+
+            <!-- We can reuse client search logic or create simplified -->
+            <div class="form-group" style="position: relative;">
+                <label>Buscar Cliente (Cédula o Nombre)</label>
+                <input type="text" id="factura-client-search" placeholder="Escriba para buscar..."
+                    onkeyup="debouncedClientSearchFactura(this.value)" autocomplete="off">
+                <div id="factura-client-results" class="dropdown-results hidden"></div>
+            </div>
+
+            <form id="form-datos-factura" onsubmit="submitSaleNamed(event)">
+                <input type="hidden" id="factura-id-cliente" name="id">
+                <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label>Cédula/RUC *</label>
+                        <input type="text" id="factura-cedula" name="cedula" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre *</label>
+                        <input type="text" id="factura-nombre" name="nombre" required>
+                    </div>
+                </div>
+                <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="text" id="factura-telefono" name="telefono">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="factura-email" name="email">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Dirección</label>
+                    <input type="text" id="factura-direccion" name="direccion">
+                </div>
+
+                <button type="submit" class="btn btn-success btn-block">Confirmar y Facturar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Generic Alert Modal -->
+    <div id="modal-alert" class="modal-overlay hidden" style="z-index: 2000;">
+        <div class="modal" style="max-width: 400px; text-align: center;">
+            <div style="margin-bottom: 1rem;">
+                <h3 id="alert-title" style="margin-bottom: 0.5rem;">Aviso</h3>
+                <p id="alert-message" style="color: var(--text-secondary);">Mensaje</p>
+            </div>
+            <button class="btn btn-primary" onclick="closeModal('modal-alert')">Entendido</button>
+        </div>
+    </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 

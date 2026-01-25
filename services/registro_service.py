@@ -47,16 +47,22 @@ def procesar_registro(data):
         if vehiculo:
             cliente = vehiculo.propietario
         else:
-            # Create Client first
-            cliente = Cliente(
-                nombre=data.get('cliente_nombre'),
-                cedula=data.get('cliente_cedula'),
-                telefono=data.get('cliente_telefono'),
-                direccion=data.get('cliente_direccion'),
-                email=data.get('cliente_email')
-            )
-            db.session.add(cliente)
-            db.session.flush() # Get ID
+            # Check if client exists by Cedula to avoid uniqueness error
+            cedula = data.get('cliente_cedula')
+            cliente = Cliente.query.filter_by(cedula=cedula).first()
+            
+            if not cliente:
+                # Create Client if not found
+                cliente = Cliente(
+                    nombre=data.get('cliente_nombre'),
+                    cedula=cedula,
+                    telefono=data.get('cliente_telefono'),
+                    direccion=data.get('cliente_direccion'),
+                    email=data.get('cliente_email')
+                )
+                db.session.add(cliente)
+                db.session.flush() # Get ID
+            # Else, use existing cliente.id_cliente
             
             # Create Vehicle
             vehiculo = Vehiculo(
@@ -83,3 +89,97 @@ def procesar_registro(data):
     except Exception as e:
         db.session.rollback()
         raise e
+
+def listar_vehiculos():
+    """Returns list of ACTIVE vehicles with owner info."""
+    vehiculos = Vehiculo.query.filter_by(activo=True).all()
+    return [{
+        "placa": v.placa,
+        "marca": v.marca,
+        "modelo": v.modelo,
+        "cliente": {
+            "nombre": v.propietario.nombre,
+            "cedula": v.propietario.cedula,
+            "telefono": v.propietario.telefono
+        }
+    } for v in vehiculos]
+
+def eliminar_vehiculo(placa):
+    """
+    Deletes a vehicle.
+    Returns: (bool, message)
+    """
+    try:
+        vehiculo = Vehiculo.query.get(placa)
+        if not vehiculo:
+            return False, "Vehículo no encontrado"
+        
+        vehiculo.activo = False
+        db.session.commit()
+        return True, "Vehículo desactivado (Soft Delete)"
+    except Exception as e:
+        db.session.rollback()
+        return False, str(e)
+
+def editar_vehiculo(placa, data):
+    """
+    Updates vehicle and owner info.
+    data format similar to create but for updates.
+    Returns: (dict, message) or (None, error_message)
+    """
+    try:
+        vehiculo = Vehiculo.query.get(placa)
+        if not vehiculo:
+            return None, "Vehículo no encontrado"
+        
+        # Update Vehicle Fields
+        if 'marca' in data: vehiculo.marca = data['marca']
+        if 'modelo' in data: vehiculo.modelo = data['modelo']
+        
+        # Update Owner Fields
+        # Note: In complex systems we might handle owner change separately, 
+        # but here we assume we are updating the current owner's details 
+        # or we could switch owner if owner_id provided. 
+        # For MVP, let's update current owner details.
+        cliente = vehiculo.propietario
+        if cliente:
+             if 'cliente_nombre' in data: cliente.nombre = data['cliente_nombre']
+             if 'cliente_cedula' in data: cliente.cedula = data['cliente_cedula']
+             if 'cliente_telefono' in data: cliente.telefono = data['cliente_telefono']
+             if 'cliente_direccion' in data: cliente.direccion = data['cliente_direccion']
+             if 'cliente_email' in data: cliente.email = data['cliente_email']
+        
+        db.session.commit()
+        return {
+            "placa": vehiculo.placa,
+            "marca": vehiculo.marca,
+            "modelo": vehiculo.modelo
+        }, "Vehículo actualizado"
+    except Exception as e:
+        db.session.rollback()
+        raise e
+    except Exception as e:
+        db.session.rollback()
+        raise e
+
+def buscar_clientes(query):
+    """
+    Search clients by name, cedula, or phone.
+    Returns list of dicts.
+    """
+    # Use ILIKE for case-insensitive search if supported (sqlite uses LIKE case-insensitive by default for ASCII, but usually LIKE is fine)
+    search = f"%{query}%"
+    clientes = Cliente.query.filter(
+        (Cliente.nombre.like(search)) | 
+        (Cliente.cedula.like(search)) |
+        (Cliente.telefono.like(search))
+    ).limit(10).all()
+    
+    return [{
+        "id": c.id_cliente,
+        "nombre": c.nombre,
+        "cedula": c.cedula,
+        "telefono": c.telefono,
+        "email": c.email,
+        "direccion": c.direccion
+    } for c in clientes]
