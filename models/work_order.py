@@ -7,7 +7,7 @@ class OrdenTrabajo(db.Model):
     sintomas = db.Column(db.Text, nullable=True)
     categoria_color = db.Column(db.String(20), nullable=True) # Express priority
     estado = db.Column(db.String(20), default='Pendiente') # Pendiente, En Proceso, Finalizada, Pagada
-    fecha_ingreso = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_ingreso = db.Column(db.DateTime, default=datetime.now)
     monto_mano_obra = db.Column(db.Float, default=0.0)
 
     # Relationships

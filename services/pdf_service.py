@@ -60,8 +60,21 @@ def generar_pdf_factura(factura, output_path=None):
             pdf.cell(40, 8, f"{d.producto.precio:.2f}", 1, 0, 'R')
             pdf.cell(40, 8, f"{subtotal:.2f}", 1, 1, 'R')
     elif factura.orden:
-        # TODO: Handle OT Details logic if different
-        pass
+        # Detalles de Repuestos
+        for d in factura.orden.detalles:
+            nombre = d.producto.nombre if d.producto else "Producto Eliminado"
+            subtotal = d.cantidad * d.precio_snapshot
+            pdf.cell(80, 8, f"{nombre[:35]}", 1)
+            pdf.cell(30, 8, str(d.cantidad), 1, 0, 'C')
+            pdf.cell(40, 8, f"{d.precio_snapshot:.2f}", 1, 0, 'R')
+            pdf.cell(40, 8, f"{subtotal:.2f}", 1, 1, 'R')
+        
+        # Mano de Obra
+        if factura.orden.monto_mano_obra > 0:
+            pdf.cell(80, 8, "Mano de Obra / Servicios", 1)
+            pdf.cell(30, 8, "1", 1, 0, 'C')
+            pdf.cell(40, 8, f"{factura.orden.monto_mano_obra:.2f}", 1, 0, 'R')
+            pdf.cell(40, 8, f"{factura.orden.monto_mano_obra:.2f}", 1, 1, 'R')
 
     # Totales
     pdf.ln(5)

@@ -146,6 +146,8 @@ def editar_vehiculo(placa, data):
              if 'cliente_nombre' in data: cliente.nombre = data['cliente_nombre']
              if 'cliente_cedula' in data: cliente.cedula = data['cliente_cedula']
              if 'cliente_telefono' in data: cliente.telefono = data['cliente_telefono']
+             if 'cliente_direccion' in data: cliente.direccion = data['cliente_direccion']
+             if 'cliente_email' in data: cliente.email = data['cliente_email']
         
         db.session.commit()
         return {

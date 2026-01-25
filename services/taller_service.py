@@ -79,7 +79,7 @@ def obtener_historial_vehiculo(placa):
     # or if we have timestamps. The snippet didn't show the model def fully but let's assume basic fields.
     return [{
         "id": ot.numeroOT,
-        "fecha": "N/A", # Add date field if available in model, otherwise placeholder
+        "fecha": ot.fecha_ingreso.strftime('%Y-%m-%d %H:%M') if ot.fecha_ingreso else "N/A",
         "contenido": ot.sintomas,
         "estado": ot.estado,
         "total": 0.0 # Placeholder, need billing logic to calc total

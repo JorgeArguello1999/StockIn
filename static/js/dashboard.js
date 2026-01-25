@@ -1069,6 +1069,8 @@ async function openVehicleDetail(v) {
     document.getElementById('det-nombre').value = v.cliente.nombre;
     document.getElementById('det-cedula').value = v.cliente.cedula;
     document.getElementById('det-telefono').value = v.cliente.telefono;
+    document.getElementById('det-direccion').value = v.cliente.direccion || '';
+    document.getElementById('det-email').value = v.cliente.email || '';
     
     // Reset Edit Mode
     setDetailEditMode(false);
@@ -1107,7 +1109,7 @@ function toggleVehicleEdit() {
 }
 
 function setDetailEditMode(enabled) {
-    const fields = ['det-marca', 'det-modelo', 'det-nombre', 'det-cedula', 'det-telefono'];
+    const fields = ['det-marca', 'det-modelo', 'det-nombre', 'det-cedula', 'det-telefono', 'det-direccion', 'det-email'];
     fields.forEach(id => {
         document.getElementById(id).disabled = !enabled;
     });
@@ -1125,7 +1127,9 @@ async function saveVehicleChanges() {
         modelo: document.getElementById('det-modelo').value,
         cliente_nombre: document.getElementById('det-nombre').value,
         cliente_cedula: document.getElementById('det-cedula').value,
-        cliente_telefono: document.getElementById('det-telefono').value
+        cliente_telefono: document.getElementById('det-telefono').value,
+        cliente_direccion: document.getElementById('det-direccion').value,
+        cliente_email: document.getElementById('det-email').value
     };
     
     try {
