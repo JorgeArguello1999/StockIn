@@ -60,3 +60,20 @@ def generar_factura_final(numero_ot, monto_mano_obra, metodo_pago):
     except Exception as e:
         db.session.rollback()
         raise e
+
+def listar_ordenes_pendientes_pago():
+    """
+    List all OTs with status 'Finalizada' (ready for billing).
+    """
+    ordenes = OrdenTrabajo.query.filter_by(estado='Finalizada').all()
+    result = []
+    
+    for ot in ordenes:
+        costo_repuestos = sum(d.precio_snapshot * d.cantidad for d in ot.detalles)
+        result.append({
+            "numero_ot": ot.numeroOT,
+            "placa": ot.placa_vehiculo,
+            "total_repuestos": costo_repuestos
+        })
+        
+    return result

@@ -778,26 +778,64 @@ async function processSale() {
 
 // Placeholder for listing liquidations
 // Needs an endpoint like /api/facturacion/pendientes
+// Placeholder for listing liquidations
+// Needs an endpoint like /api/facturacion/pendientes
 async function loadLiquidaciones() {
-    console.log("Loading liquidaciones...");
-    // Mock
-    /*
     const tbody = document.getElementById('lista-caja');
-    tbody.innerHTML = `
-        <tr>
-            <td>101</td>
-            <td>ABC-123</td>
-            <td>$150.00</td>
-            <td><input type="number" placeholder="Monto MO" id="mo-101"></td>
-            <td><button class="btn btn-sm btn-success" onclick="facturar(101)">Cobrar</button></td>
-        </tr>
-    `;
-    */
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center">Cargando...</td></tr>';
+    
+    try {
+        const res = await fetch(`${API_BASE}/facturacion/pendientes`);
+        const ordenes = await res.json();
+        
+        if(!res.ok) throw new Error(ordenes.error || 'Error al cargar');
+        
+        if (ordenes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay órdenes pendientes de cobro</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = ordenes.map(ot => `
+            <tr>
+                <td>${ot.numero_ot}</td>
+                <td><span class="badge badge-primary">${ot.placa}</span></td>
+                <td>$${ot.total_repuestos.toFixed(2)}</td>
+                <td>
+                    <input type="number" 
+                           class="form-control" 
+                           placeholder="0.00" 
+                           id="mo-${ot.numero_ot}" 
+                           min="0" step="0.01"
+                           style="width: 100px;">
+                </td>
+                <td style="display: flex; gap: 0.5rem; align-items: center;">
+                    <select class="form-control" id="metodo-${ot.numero_ot}" style="width: 100px;">
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Tarjeta">Tarjeta</option>
+                        <option value="Transferencia">Transf.</option>
+                    </select>
+                    <button class="btn btn-sm btn-success" onclick="facturar(${ot.numero_ot})">
+                        Cobrar
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${e.message}</td></tr>`;
+    }
 }
 
 async function facturar(otId) {
-    const mo = document.getElementById(`mo-${otId}`).value;
-    if(!mo) return showAlert("Ingrese mano de obra", "Aviso");
+    const moInput = document.getElementById(`mo-${otId}`);
+    const metodoInput = document.getElementById(`metodo-${otId}`);
+    
+    const mo = moInput.value;
+    const metodo = metodoInput.value;
+    
+    if(!mo || mo < 0) return showAlert("Ingrese un monto válido para Mano de Obra", "Aviso");
+    
+    if(!confirm(`¿Confirma cobrar la orden OT-${otId} por Mano de Obra $${mo} en ${metodo}?`)) return;
     
     try {
         const res = await fetch(`${API_BASE}/facturacion/facturar/${otId}`, {
@@ -805,19 +843,21 @@ async function facturar(otId) {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 monto_mano_obra: parseFloat(mo),
-                metodo_pago: 'efectivo' // hardcoded for demo
+                metodo_pago: metodo
             })
         });
+        
         const result = await res.json();
         
         if(res.ok) {
-            showAlert(`Factura #${result.nro_factura} generada. Total: $${result.total}`, 'Factura Exitosa');
-            loadLiquidaciones();
+            showAlert(`Factura #${result.nro_factura} generada. Total: $${result.total.toFixed(2)}`, 'Venta Confirmada');
+            loadLiquidaciones(); // Refresh list
         } else {
             showAlert('Error: ' + result.error, 'Error');
         }
-    } catch(e) { showAlert('Error de red', 'Error'); }
+    } catch(e) { showAlert('Error de red al facturar', 'Error'); }
 }
+
 
 async function handleCreateProduct(e) {
     e.preventDefault();
