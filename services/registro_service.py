@@ -47,16 +47,22 @@ def procesar_registro(data):
         if vehiculo:
             cliente = vehiculo.propietario
         else:
-            # Create Client first
-            cliente = Cliente(
-                nombre=data.get('cliente_nombre'),
-                cedula=data.get('cliente_cedula'),
-                telefono=data.get('cliente_telefono'),
-                direccion=data.get('cliente_direccion'),
-                email=data.get('cliente_email')
-            )
-            db.session.add(cliente)
-            db.session.flush() # Get ID
+            # Check if client exists by Cedula to avoid uniqueness error
+            cedula = data.get('cliente_cedula')
+            cliente = Cliente.query.filter_by(cedula=cedula).first()
+            
+            if not cliente:
+                # Create Client if not found
+                cliente = Cliente(
+                    nombre=data.get('cliente_nombre'),
+                    cedula=cedula,
+                    telefono=data.get('cliente_telefono'),
+                    direccion=data.get('cliente_direccion'),
+                    email=data.get('cliente_email')
+                )
+                db.session.add(cliente)
+                db.session.flush() # Get ID
+            # Else, use existing cliente.id_cliente
             
             # Create Vehicle
             vehiculo = Vehiculo(
