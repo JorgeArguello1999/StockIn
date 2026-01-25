@@ -1,4 +1,4 @@
-from routes.signin_signup import signin_signup_bp
+from .signin import signin_bp
 
 def register_routes(app):
-    app.register_blueprint(signin_signup_bp)
+    app.register_blueprint(signin_bp)

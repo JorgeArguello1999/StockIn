@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - StockIn{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-container">
+        <!-- Sign In Form -->
+        <div class="auth-box sign-in-box" id="signInBox">
+            <h2>Welcome Back</h2>
+            <p class="subtitle">Enter your credentials to access your account</p>
+            <form action="{{ url_for('signin.signin') }}" method="POST">
+                <div class="input-group">
+                    <label for="signin-email">Email Address</label>
+                    <input type="email" id="signin-email" name="email" placeholder="name@company.com" required>
+                </div>
+                <div class="input-group">
+                    <label for="signin-password">Password</label>
+                    <input type="password" id="signin-password" name="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Sign In</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
