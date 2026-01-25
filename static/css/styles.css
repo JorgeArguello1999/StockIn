@@ -560,3 +560,31 @@ svg[id^="barcode-"] {
     border-radius: 4px;
     margin-bottom: 0.5rem;
 }
+
+/* Badges */
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: white;
+}
+.badge.warning { background-color: #f59e0b; color: black; }
+.badge.primary { background-color: var(--primary-color); }
+.badge.success { background-color: var(--success-color); }
+
+.ot-barcodes {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+.ot-barcodes div {
+    text-align: center;
+}
+.ot-barcodes svg {
+    max-width: 100px;
+    height: 40px;
+}

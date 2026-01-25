@@ -47,6 +47,8 @@ def add_part():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@taller_api.route('/finalizar/<int:ot_id>', methods=['POST'])
+def finish_work(ot_id):
     ot, msg = finalizar_orden(ot_id)
     if not ot:
         return jsonify({"error": msg}), 400

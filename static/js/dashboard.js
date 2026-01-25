@@ -323,7 +323,21 @@ function createOtCard(ot, columnId) {
         <div style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-primary);">
             <b>${ot.categoria || 'Trabajo'}:</b> ${ot.sintomas}
         </div>
-        <div><span class="badge ${ot.estado === 'Finalizada' ? 'success' : (ot.estado === 'En Proceso' ? 'primary' : 'warning')}">${ot.estado}</span></div>
+        <div style="margin-bottom: 0.5rem;">
+            <span class="badge ${ot.estado === 'Finalizada' ? 'success' : (ot.estado === 'En Proceso' ? 'primary' : 'warning')}">${ot.estado}</span>
+        </div>
+        
+        <div class="ot-barcodes">
+            <div>
+                <svg id="bc-veh-${ot.id}"></svg>
+                <div style="font-size:0.6rem; color: var(--text-secondary);">Vehículo</div>
+            </div>
+            <div>
+                 <svg id="bc-ot-${ot.id}"></svg>
+                 <div style="font-size:0.6rem; color: var(--text-secondary);">Orden</div>
+            </div>
+        </div>
+
         ${!isFinalized ? `
         <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
             <button class="btn btn-sm btn-primary" onclick="openRepuestoModal(${ot.id})">+ Repuesto</button>
@@ -336,6 +350,12 @@ function createOtCard(ot, columnId) {
         ` : `<div style="margin-top:0.5rem; font-size:0.8rem; color: var(--success-color);">Orden Cerrada</div>`}
     `;
     col.appendChild(div);
+    
+    // Render Barcodes
+    try {
+        JsBarcode(`#bc-veh-${ot.id}`, ot.placa, {format: "CODE128", width: 1, height: 25, displayValue: true, fontSize: 10});
+        JsBarcode(`#bc-ot-${ot.id}`, "OT-" + ot.id, {format: "CODE128", width: 1, height: 25, displayValue: true, fontSize: 10});
+    } catch(e) {}
 }
 
 // Actions
