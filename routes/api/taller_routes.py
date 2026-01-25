@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from services.taller_service import iniciar_servicio, agregar_repuesto, finalizar_orden, listar_ordenes
+from services.taller_service import iniciar_servicio, agregar_repuesto, finalizar_orden, listar_ordenes, revertir_orden
 
 taller_api = Blueprint('taller_api', __name__, url_prefix='/api/taller')
 
@@ -50,6 +50,15 @@ def add_part():
 @taller_api.route('/finalizar/<int:ot_id>', methods=['POST'])
 def finish_work(ot_id):
     ot, msg = finalizar_orden(ot_id)
+    if not ot:
+        return jsonify({"error": msg}), 400
+    return jsonify({"mensaje": msg, "estado": ot.estado}), 200
+
+    return jsonify({"mensaje": msg, "estado": ot.estado}), 200
+
+@taller_api.route('/revertir/<int:ot_id>', methods=['POST'])
+def revert_work(ot_id):
+    ot, msg = revertir_orden(ot_id)
     if not ot:
         return jsonify({"error": msg}), 400
     return jsonify({"mensaje": msg, "estado": ot.estado}), 200

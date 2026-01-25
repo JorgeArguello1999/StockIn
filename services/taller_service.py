@@ -61,6 +61,19 @@ def finalizar_orden(numero_ot):
     db.session.commit()
     return ot, "Orden finalizada"
 
+def revertir_orden(numero_ot):
+    """Reverts status from Finalizada to En Proceso."""
+    ot = OrdenTrabajo.query.get(numero_ot)
+    if not ot:
+        return None, "Orden no encontrada"
+    
+    if ot.estado != 'Finalizada':
+        return None, f"No se puede revertir. Estado actual: {ot.estado}"
+    
+    ot.estado = 'En Proceso'
+    db.session.commit()
+    return ot, "Orden regresada a Taller"
+
 def listar_ordenes():
     ordenes = OrdenTrabajo.query.all()
     # Serialize manually for now

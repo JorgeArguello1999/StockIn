@@ -915,6 +915,9 @@ async function loadLiquidaciones() {
                            style="width: 100px;">
                 </td>
                 <td style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button class="btn btn-sm btn-secondary" onclick="revertOt(${ot.numero_ot})" title="Devolver a Taller">
+                        🔙
+                    </button>
                     <select class="form-control" id="metodo-${ot.numero_ot}" style="width: 100px;">
                         <option value="Efectivo">Efectivo</option>
                         <option value="Tarjeta">Tarjeta</option>
@@ -962,6 +965,22 @@ async function facturar(otId) {
             showAlert('Error: ' + result.error, 'Error');
         }
     } catch(e) { showAlert('Error de red al facturar', 'Error'); }
+}
+
+async function revertOt(otId) {
+    if(!confirm(`¿Desea devolver la OT-${otId} a Taller?`)) return;
+    
+    try {
+        const res = await fetch(`${API_BASE}/taller/revertir/${otId}`, { method: 'POST' });
+        const result = await res.json();
+        
+        if(res.ok) {
+            showAlert("Orden devuelta a proceso en Taller", "Éxito");
+            loadLiquidaciones(); // Refresh list
+        } else {
+            showAlert("Error: " + result.error, "Error");
+        }
+    } catch(e) { showAlert("Error de red", "Error"); }
 }
 
 
