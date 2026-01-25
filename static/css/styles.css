@@ -479,3 +479,8 @@ th {
 }
 .inv-stock-btn:hover { opacity: 0.8; }
 
+svg[id^="barcode-"] {
+    max-width: 100%;
+    height: auto;
+}
+

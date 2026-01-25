@@ -240,6 +240,10 @@ function renderInventory(items) {
                 <div class="inv-meta">ID: ${item.id} | ${item.unidad || 'u'}</div>
                 <div class="inv-price">$${item.precio.toFixed(2)}</div>
                 
+                <div style="text-align: center; margin: 0.5rem 0;">
+                    <svg id="barcode-${item.id}"></svg>
+                </div>
+
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span style="font-size:0.8rem; color:var(--text-secondary);">Stock: <b id="stock-${item.id}">${item.stock}</b></span>
                 </div>
@@ -250,7 +254,21 @@ function renderInventory(items) {
             </div>
         `;
         grid.appendChild(card);
+        
+        // Render Barcode
+        try {
+            JsBarcode(`#barcode-${item.id}`, item.id.toString(), {
+                format: "CODE128",
+                width: 1.5,
+                height: 30,
+                displayValue: true
+            });
+        } catch(e) { console.error("Barcode error", e); }
     });
+}
+
+function openScanner() {
+    showAlert("La función de escáner de cámara estará disponible pronto.", "Cámara");
 }
 
 // Edit Logic
