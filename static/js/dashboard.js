@@ -131,7 +131,7 @@ async function startWork(otId) {
     try {
         const res = await fetch(`${API_BASE}/taller/iniciar/${otId}`, {method: 'POST'});
         if(res.ok) refreshTaller();
-        else alert('Error al iniciar');
+        else showAlert('Error al iniciar', 'Error');
     } catch(e) { console.error(e); }
 }
 
@@ -140,7 +140,7 @@ async function finishWork(otId) {
     try {
         const res = await fetch(`${API_BASE}/taller/finalizar/${otId}`, {method: 'POST'});
         if(res.ok) refreshTaller();
-        else alert('Error al finalizar');
+        else showAlert('Error al finalizar', 'Error');
     } catch(e) { console.error(e); }
 }
 
@@ -163,13 +163,13 @@ async function handleAddRepuesto(e) {
         const result = await res.json();
         
         if(res.ok) {
-            alert(`Repuesto agregado: ${result.producto} ($${result.precio})`);
+            showAlert(`Repuesto agregado: ${result.producto} ($${result.precio})`, 'Éxito');
             closeModal('modal-repuesto');
             e.target.reset();
         } else {
-            alert('Error: ' + result.error);
+            showAlert('Error: ' + result.error, 'Error');
         }
-    } catch(e) { alert('Error de red'); }
+    } catch(e) { showAlert('Error de red', 'Error'); }
 }
 
 
@@ -192,6 +192,13 @@ async function fetchInventory() {
             localInventory = await res.json();
         }
     } catch(e) { console.error(e); }
+}
+
+// Custom Alert
+function showAlert(message, title='Aviso') {
+    document.getElementById('alert-title').innerText = title;
+    document.getElementById('alert-message').innerText = message;
+    openModal('modal-alert');
 }
 
 // Render
@@ -235,10 +242,6 @@ function renderInventory(items) {
                 
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span style="font-size:0.8rem; color:var(--text-secondary);">Stock: <b id="stock-${item.id}">${item.stock}</b></span>
-                    <div class="inv-stock-ctrl">
-                        <button class="inv-stock-btn" onclick="updateStock(${item.id}, -1)">-</button>
-                        <button class="inv-stock-btn" onclick="updateStock(${item.id}, 1)">+</button>
-                    </div>
                 </div>
 
                 <button class="btn btn-primary btn-sm" style="margin-top: 1rem;" onclick="addToCartItem(${item.id}, '${item.nombre}', ${item.precio})">
@@ -276,13 +279,13 @@ async function handleEditProduct(e) {
         });
         
         if(res.ok) {
-            alert('Producto actualizado');
+            showAlert('Producto actualizado', 'Éxito');
             closeModal('modal-editar-producto');
             fetchInventory().then(() => renderInventory(localInventory)); // Refresh
         } else {
-            alert('Error al actualizar');
+            showAlert('Error al actualizar', 'Error');
         }
-    } catch(e) { alert('Error de red'); }
+    } catch(e) { showAlert('Error de red', 'Error'); }
 }
 
 // Filter
@@ -362,7 +365,7 @@ function removeFromCart(idx) {
 }
 
 async function processSale() {
-    if(carrito.length === 0) return alert("Carrito vacío");
+    if(carrito.length === 0) return showAlert("Carrito vacío", "Aviso");
     
     try {
         const res = await fetch(`${API_BASE}/venta/crear`, {
@@ -373,13 +376,13 @@ async function processSale() {
         const result = await res.json();
         
         if(res.ok) {
-            alert(`Venta exitosa! ID: ${result.id_venta} Total: $${result.total}`);
+            showAlert(`Venta exitosa! ID: ${result.id_venta} Total: $${result.total}`, 'Venta Confirmada');
             carrito = [];
             renderCart();
         } else {
-            alert('Error: ' + result.error);
+            showAlert('Error: ' + result.error, 'Error');
         }
-    } catch(e) { alert('Error de red'); }
+    } catch(e) { showAlert('Error de red', 'Error'); }
 }
 
 
@@ -406,7 +409,7 @@ async function loadLiquidaciones() {
 
 async function facturar(otId) {
     const mo = document.getElementById(`mo-${otId}`).value;
-    if(!mo) return alert("Ingrese mano de obra");
+    if(!mo) return showAlert("Ingrese mano de obra", "Aviso");
     
     try {
         const res = await fetch(`${API_BASE}/facturacion/facturar/${otId}`, {
@@ -420,12 +423,12 @@ async function facturar(otId) {
         const result = await res.json();
         
         if(res.ok) {
-            alert(`Factura #${result.nro_factura} generada. Total: $${result.total}`);
+            showAlert(`Factura #${result.nro_factura} generada. Total: $${result.total}`, 'Factura Exitosa');
             loadLiquidaciones();
         } else {
-            alert('Error: ' + result.error);
+            showAlert('Error: ' + result.error, 'Error');
         }
-    } catch(e) { alert('Error de red'); }
+    } catch(e) { showAlert('Error de red', 'Error'); }
 }
 
 async function handleCreateProduct(e) {
@@ -442,11 +445,11 @@ async function handleCreateProduct(e) {
         const result = await res.json();
         
         if(res.ok) {
-            alert(`Producto creado: ${result.nombre} (ID: ${result.id})`);
+            showAlert(`Producto creado: ${result.nombre} (ID: ${result.id})`, 'Éxito');
             closeModal('modal-crear-producto');
             e.target.reset();
         } else {
-            alert('Error: ' + result.error);
+            showAlert('Error: ' + result.error, 'Error');
         }
-    } catch(e) { alert('Error de red'); }
+    } catch(e) { showAlert('Error de red', 'Error'); }
 }
