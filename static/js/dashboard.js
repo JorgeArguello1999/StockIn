@@ -65,6 +65,17 @@ function renderReception(list) {
     list.forEach(v => {
         const card = document.createElement('div');
         card.className = 'inventory-card';
+        // Escape json
+        const vJson = JSON.stringify(v).replace(/"/g, '&quot;');
+        
+        // Make entire card clickable
+        card.onclick = (e) => {
+            // Prevent if clicking delete
+            if(e.target.tagName === 'BUTTON') return;
+            openVehicleDetail(v);
+        };
+        card.style.cursor = 'pointer';
+
         card.innerHTML = `
             <div class="inv-img" style="background: #1e293b; height: 80px;">
                 <span style="font-size: 2rem;">🚗</span>
@@ -74,6 +85,11 @@ function renderReception(list) {
                     ${v.placa}
                 </div>
                 <div style="font-weight: 600;">${v.marca} ${v.modelo}</div>
+                
+                <div style="text-align: center; margin: 0.5rem 0;">
+                    <svg id="barcode-veh-${v.placa}"></svg>
+                </div>
+                
                 <div class="inv-meta" style="margin-top: 0.5rem;">
                     <div>👤 ${v.cliente.nombre}</div>
                     <div>🆔 ${v.cliente.cedula}</div>
@@ -85,6 +101,16 @@ function renderReception(list) {
             </div>
         `;
         grid.appendChild(card);
+        
+        // Render Barcode
+        try {
+            JsBarcode(`#barcode-veh-${v.placa}`, v.placa, {
+                format: "CODE128",
+                width: 1.5,
+                height: 30,
+                displayValue: false
+            });
+        } catch(e) { console.error("Barcode error", e); }
     });
 }
 
@@ -624,6 +650,106 @@ async function handleDeleteVehicle(placa) {
             fetchVehicles().then(() => renderReception(localVehicles));
         } else {
             showAlert(result.error || 'Error al eliminar', 'Error');
+        }
+    } catch(e) { showAlert('Error de red', 'Error'); }
+}
+
+// Vehicle Detail & History
+let currentDetailPlaca = null;
+
+async function openVehicleDetail(v) {
+    currentDetailPlaca = v.placa;
+    document.getElementById('detail-placa').innerText = v.placa;
+    
+    // Populate Fields (Read Only)
+    document.getElementById('det-marca').value = v.marca;
+    document.getElementById('det-modelo').value = v.modelo;
+    document.getElementById('det-nombre').value = v.cliente.nombre;
+    document.getElementById('det-cedula').value = v.cliente.cedula;
+    document.getElementById('det-telefono').value = v.cliente.telefono;
+    
+    // Reset Edit Mode
+    setDetailEditMode(false);
+    
+    openModal('modal-detalle-vehiculo');
+    
+    // Fetch History
+    const listBody = document.getElementById('vehicle-history-list');
+    listBody.innerHTML = '<tr><td colspan="5">Cargando...</td></tr>';
+    
+    try {
+        const res = await fetch(`${API_BASE}/taller/historial/${v.placa}`);
+        const history = await res.json();
+        
+        if(history.length === 0) {
+            listBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Sin historial</td></tr>';
+        } else {
+            listBody.innerHTML = history.map(h => `
+                <tr>
+                    <td>#${h.id}</td>
+                    <td>${h.fecha}</td>
+                    <td>${h.contenido}</td>
+                    <td><span class="badge ${h.estado === 'Finalizada' ? 'success' : 'warning'}">${h.estado}</span></td>
+                    <td>$${h.total}</td>
+                </tr>
+            `).join('');
+        }
+    } catch(e) {
+        listBody.innerHTML = '<tr><td colspan="5" style="color:red;">Error al cargar historial</td></tr>';
+    }
+}
+
+function toggleVehicleEdit() {
+    // Unlock fields
+    setDetailEditMode(true);
+}
+
+function setDetailEditMode(enabled) {
+    const fields = ['det-marca', 'det-modelo', 'det-nombre', 'det-cedula', 'det-telefono'];
+    fields.forEach(id => {
+        document.getElementById(id).disabled = !enabled;
+    });
+    
+    if(enabled) {
+        document.getElementById('btn-save-vehicle').classList.remove('hidden');
+    } else {
+        document.getElementById('btn-save-vehicle').classList.add('hidden');
+    }
+}
+
+async function saveVehicleChanges() {
+    const data = {
+        marca: document.getElementById('det-marca').value,
+        modelo: document.getElementById('det-modelo').value,
+        cliente_nombre: document.getElementById('det-nombre').value,
+        cliente_cedula: document.getElementById('det-cedula').value,
+        cliente_telefono: document.getElementById('det-telefono').value
+    };
+    
+    try {
+        const res = await fetch(`${API_BASE}/registro/editar/${currentDetailPlaca}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        if(res.ok) {
+            showAlert('Datos actualizados', 'Éxito');
+            setDetailEditMode(false);
+            fetchVehicles().then(() => {
+                // Update local list reference so re-opening shows new data without fetch
+                // Actually fetchVehicles updates localVehicles, we just need to re-find it if we want to update the open modal context, 
+                // but since we just saved what's in inputs, inputs are already correct.
+                renderReception(localVehicles);
+            });
+        } else {
+            // Try to parse error
+            let msg = 'Error al actualizar';
+            try { 
+                const result = await res.json(); 
+                if(result.error) msg = result.error;
+            } catch(e) {}
+            showAlert(msg, 'Error');
         }
     } catch(e) { showAlert('Error de red', 'Error'); }
 }

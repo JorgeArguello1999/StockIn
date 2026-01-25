@@ -8,6 +8,15 @@ def list_orders():
     ordenes = listar_ordenes()
     return jsonify(ordenes), 200
 
+@taller_api.route('/historial/<placa>', methods=['GET'])
+def vehicle_history(placa):
+    try:
+        from services.taller_service import obtener_historial_vehiculo
+        historial = obtener_historial_vehiculo(placa)
+        return jsonify(historial), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @taller_api.route('/iniciar/<int:ot_id>', methods=['POST'])
 def start_work(ot_id):
     ot, msg = iniciar_servicio(ot_id)

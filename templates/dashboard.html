@@ -358,6 +358,72 @@
         </div>
     </div>
 
+    <!-- Vehicle Detail & History Modal -->
+    <div id="modal-detalle-vehiculo" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>Detalles del Vehículo</h3>
+                <button class="close-modal" onclick="closeModal('modal-detalle-vehiculo')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 id="detail-placa" style="color: var(--primary-color);">ABC-123</h2>
+                    <button class="btn btn-secondary" onclick="toggleVehicleEdit()">Editar Datos</button>
+                    <button id="btn-save-vehicle" class="btn btn-success hidden" onclick="saveVehicleChanges()">Guardar
+                        Cambios</button>
+                </div>
+
+                <form id="form-detalle-vehiculo">
+                    <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
+                        <div class="form-group">
+                            <label>Marca</label>
+                            <input type="text" id="det-marca" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Modelo</label>
+                            <input type="text" id="det-modelo" disabled>
+                        </div>
+                    </div>
+                    <h4>Propietario</h4>
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="det-nombre" disabled>
+                    </div>
+                    <div class="grid grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Cédula</label>
+                            <input type="text" id="det-cedula" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="text" id="det-telefono" disabled>
+                        </div>
+                    </div>
+                </form>
+
+                <hr style="margin: 2rem 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                <h3>Historial de Servicios / Facturas</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID Orden</th>
+                                <th>Fecha</th>
+                                <th>Detalle</th>
+                                <th>Estado</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vehicle-history-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Generic Alert Modal -->
     <div id="modal-alert" class="modal-overlay hidden" style="z-index: 2000;">
         <div class="modal" style="max-width: 400px; text-align: center;">

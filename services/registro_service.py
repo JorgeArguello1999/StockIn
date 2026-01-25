@@ -116,3 +116,39 @@ def eliminar_vehiculo(placa):
         if "foreign key constraint" in str(e).lower():
             return False, "No se puede eliminar: tiene órdenes de trabajo asociadas."
         return False, str(e)
+
+def editar_vehiculo(placa, data):
+    """
+    Updates vehicle and owner info.
+    data format similar to create but for updates.
+    Returns: (dict, message) or (None, error_message)
+    """
+    try:
+        vehiculo = Vehiculo.query.get(placa)
+        if not vehiculo:
+            return None, "Vehículo no encontrado"
+        
+        # Update Vehicle Fields
+        if 'marca' in data: vehiculo.marca = data['marca']
+        if 'modelo' in data: vehiculo.modelo = data['modelo']
+        
+        # Update Owner Fields
+        # Note: In complex systems we might handle owner change separately, 
+        # but here we assume we are updating the current owner's details 
+        # or we could switch owner if owner_id provided. 
+        # For MVP, let's update current owner details.
+        cliente = vehiculo.propietario
+        if cliente:
+             if 'cliente_nombre' in data: cliente.nombre = data['cliente_nombre']
+             if 'cliente_cedula' in data: cliente.cedula = data['cliente_cedula']
+             if 'cliente_telefono' in data: cliente.telefono = data['cliente_telefono']
+        
+        db.session.commit()
+        return {
+            "placa": vehiculo.placa,
+            "marca": vehiculo.marca,
+            "modelo": vehiculo.modelo
+        }, "Vehículo actualizado"
+    except Exception as e:
+        db.session.rollback()
+        raise e

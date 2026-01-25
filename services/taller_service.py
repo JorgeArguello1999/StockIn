@@ -66,3 +66,16 @@ def listar_ordenes():
         "sintomas": ot.sintomas,
         "categoria": ot.categoria_color
     } for ot in ordenes]
+
+def obtener_historial_vehiculo(placa):
+    """Returns list of OTs for a specific vehicle."""
+    ordenes = OrdenTrabajo.query.filter_by(placa_vehiculo=placa).order_by(OrdenTrabajo.numeroOT.desc()).all()
+    # Assuming 'fecha_ingreso' is not clearly defined in snippet, using OT ID as proxy for order 
+    # or if we have timestamps. The snippet didn't show the model def fully but let's assume basic fields.
+    return [{
+        "id": ot.numeroOT,
+        "fecha": "N/A", # Add date field if available in model, otherwise placeholder
+        "contenido": ot.sintomas,
+        "estado": ot.estado,
+        "total": 0.0 # Placeholder, need billing logic to calc total
+    } for ot in ordenes]

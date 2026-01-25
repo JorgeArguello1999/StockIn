@@ -22,6 +22,18 @@ def delete_vehicle_endpoint(placa):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@registro_api.route('/editar/<placa>', methods=['PUT'])
+def edit_vehicle_endpoint(placa):
+    data = request.get_json()
+    try:
+        from services.registro_service import editar_vehiculo
+        res, msg = editar_vehiculo(placa, data)
+        if not res:
+             return jsonify({"error": msg}), 404
+        return jsonify({"mensaje": msg}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @registro_api.route('/validar/<placa>', methods=['GET'])
 def check_vehicle(placa):
     result = validar_vehiculo(placa)
