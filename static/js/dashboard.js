@@ -20,6 +20,7 @@ function showPanel(panelId, btn) {
     if (panelId === 'panel-ventas') initPOS();
     if (panelId === 'panel-caja') loadLiquidaciones();
     if (panelId === 'panel-facturas') loadFacturas();
+    if (panelId === 'panel-usuarios') loadUsers();
 }
 
 // Modals
@@ -1335,29 +1336,74 @@ function renderDashboard(data) {
 // === USER MANAGEMENT (Admin) ===
 
 async function loadUsers() {
-    const tbody = document.getElementById('users-list');
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Cargando...</td></tr>';
+    const grid = document.getElementById('users-grid');
+    grid.innerHTML = '<div style="color:var(--text-secondary); text-align:center;">Cargando...</div>';
+    // Remove grid class to allow table full width if needed, or ensure CSS handles it. 
+    // The CSS .user-grid has grid-template-columns. We should probably override that in JS or CSS.
+    // Let's reset the style of the container to be a simple block for the table.
+    grid.style.display = 'block';
     
     try {
         const res = await fetch(`${API_BASE}/users/listar`);
         if(!res.ok) throw new Error("Acceso denegado o error");
         
         const users = await res.json();
-        tbody.innerHTML = users.map(u => `
-            <tr>
-                <td>${u.id}</td>
-                <td><strong>${u.username}</strong></td>
-                <td><span class="badge ${u.role === 'admin' ? 'danger' : 'primary'}">${u.role}</span></td>
-                <td>${u.email}</td>
-                <td>${u.created_at}</td>
-                <td>
-                    <button class="btn btn-sm btn-warning" onclick="promptResetPassword(${u.id}, '${u.username}')">🔑</button>
-                    <button class="btn btn-sm btn-danger" onclick="promptDeleteUser(${u.id}, '${u.role}')">🗑️</button>
-                </td>
-            </tr>
-        `).join('');
+        
+        if(users.length === 0) {
+             grid.innerHTML = '<div style="text-align:center;">No hay usuarios registrados</div>';
+             return;
+        }
+
+        let tableHtml = `
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Fecha Registro</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        tableHtml += users.map(u => {
+            const initials = u.username.substring(0,2).toUpperCase();
+            return `
+                <tr>
+                    <td style="display:flex; align-items:center; gap:0.5rem;">
+                        <div class="user-avatar" style="width:30px; height:30px; font-size:0.8rem; margin:0;">${initials}</div>
+                        <span>${u.username}</span>
+                    </td>
+                    <td>${u.email}</td>
+                    <td><span class="badge ${u.role === 'admin' ? 'role-admin' : 'role-mechanic'}">${u.role}</span></td>
+                    <td>${u.created_at}</td>
+                    <td>
+                        <div style="display:flex; gap:0.5rem;">
+                            <button class="btn btn-sm btn-warning" onclick="promptResetPassword(${u.id}, '${u.username}')" title="Reset Password">
+                                🔑
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="promptDeleteUser(${u.id}, '${u.role}')" title="Eliminar">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        
+        tableHtml += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        grid.innerHTML = tableHtml;
+        
     } catch(e) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error: ${e.message}</td></tr>`;
+        grid.innerHTML = `<div style="color:var(--danger-color); text-align:center;">Error: ${e.message}</div>`;
     }
 }
 

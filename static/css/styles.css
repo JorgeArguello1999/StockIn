@@ -588,3 +588,124 @@ svg[id^="barcode-"] {
     max-width: 100px;
     height: 40px;
 }
+
+/* User Management Grid */
+.user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.user-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    height: 100%;
+    justify-content: space-between;
+}
+
+.user-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+.user-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), #6366f1);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.user-info {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.user-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.user-email {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.user-role {
+    margin-top: 0.5rem;
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.role-admin { background-color: rgba(239, 68, 68, 0.2); color: var(--danger-color); border: 1px solid rgba(239, 68, 68, 0.3); }
+.role-mechanic { background-color: rgba(59, 130, 246, 0.2); color: var(--primary-color); border: 1px solid rgba(59, 130, 246, 0.3); }
+
+.user-actions {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.user-actions button {
+    flex: 1;
+}
+
+.user-meta-date {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
+.user-card-add {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-style: dashed;
+    border-width: 2px;
+    background-color: rgba(59, 130, 246, 0.05); /* very light blue */
+    min-height: 250px;
+    height: 100%;
+}
+
+.user-card-add:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-color: var(--primary-color);
+}
+
+.user-add-icon {
+    font-size: 4rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.user-add-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}

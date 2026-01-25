@@ -60,14 +60,13 @@
                 </button>
             </li>
             <li class="nav-item">
-                <button class="nav-btn" onclick="showPanel('panel-usuarios', this)">
-                    👥 Usuarios
-                </button>
-            </li>
-            </li>
-            <li class="nav-item">
                 <button class="nav-btn" onclick="showPanel('panel-facturas', this)">
                     📑 Facturas
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-btn" onclick="showPanel('panel-usuarios', this)">
+                    👥 Usuarios
                 </button>
             </li>
             {% endif %}
@@ -717,6 +716,22 @@
         </div>
     </div>
 
+    <!-- === PANEL USUARIOS (ADMIN) === -->
+    <div id="panel-usuarios" class="panel">
+        <div class="panel-header">
+            <h1 class="panel-title">Gestión de Usuarios</h1>
+            <div style="display:flex; gap:0.5rem;">
+                <button class="btn btn-success btn-sm" onclick="openModal('modal-crear-usuario')">+ Nuevo
+                    Usuario</button>
+                <button class="btn btn-primary btn-sm" onclick="loadUsers()">🔄 Actualizar</button>
+            </div>
+        </div>
+
+        <div id="users-grid" class="user-grid">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
     <!-- Generic Alert Modal -->
     <div id="modal-alert" class="modal-overlay hidden" style="z-index: 2000;">
         <div class="modal" style="max-width: 400px; text-align: center;">
@@ -728,37 +743,7 @@
         </div>
     </div>
 
-    </div>
-
-    <!-- === PANEL USUARIOS (ADMIN) === -->
-    <div id="panel-usuarios" class="panel">
-        <div class="panel-header">
-            <h1 class="panel-title">Gestión de Usuarios</h1>
-            <div style="display:flex; gap:0.5rem;">
-                <button class="btn btn-primary btn-sm" onclick="loadUsers()">🔄 Actualizar</button>
-                <button class="btn btn-success btn-sm" onclick="openModal('modal-crear-usuario')">+ Crear
-                    Usuario</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <table style="width:100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="text-align:left; border-bottom: 2px solid var(--border-color);">
-                        <th style="padding:1rem;">ID</th>
-                        <th style="padding:1rem;">Usuario</th>
-                        <th style="padding:1rem;">Rol</th>
-                        <th style="padding:1rem;">Email</th>
-                        <th style="padding:1rem;">Fecha Creación</th>
-                        <th style="padding:1rem;">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="users-list">
-                    <!-- Populated by JS -->
-                </tbody>
-            </table>
-        </div>
-    </div>
+    </div> <!-- Close Main Content -->
 
     <!-- Modals for Users -->
     <div id="modal-crear-usuario" class="modal-overlay hidden">
