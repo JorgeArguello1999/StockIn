@@ -33,3 +33,22 @@ def listar_productos():
         "stock": p.stock_actual,
         "unidad": p.unidad_medida
     } for p in productos]
+
+def actualizar_stock(id_producto, cambio):
+    """
+    Updates stock. 
+    cambio: positive to add, negative to remove.
+    """
+    try:
+        producto = Inventario.query.get(id_producto)
+        if not producto:
+            return None, "Producto no encontrado"
+        
+        # Optionally allow negative stock or block it. 
+        # For simplicity, let's allow it or just add.
+        producto.stock_actual += int(cambio)
+        db.session.commit()
+        return producto, "Stock actualizado"
+    except Exception as e:
+        db.session.rollback()
+        raise e

@@ -15,6 +15,7 @@ function showPanel(panelId, btn) {
 
     // Trigger loads if needed
     if (panelId === 'panel-taller') refreshTaller();
+    if (panelId === 'panel-ventas') initPOS();
     if (panelId === 'panel-caja') loadLiquidaciones();
 }
 
@@ -174,24 +175,141 @@ async function handleAddRepuesto(e) {
 
 // === VENTAS (POS) ===
 
-function addToCart() {
-    const id = document.getElementById('pos-prod-id').value;
-    const qty = document.getElementById('pos-cantidad').value;
+// Inventory State
+let localInventory = [];
+
+// Init POS (called when showing panel)
+async function initPOS() {
+    await fetchInventory();
+    renderInventory(localInventory);
+}
+
+// Fetch
+async function fetchInventory() {
+    try {
+        const res = await fetch(`${API_BASE}/inventario/listar`);
+        if(res.ok) {
+            localInventory = await res.json();
+        }
+    } catch(e) { console.error(e); }
+}
+
+// Render
+function renderInventory(items) {
+    const grid = document.getElementById('inventory-grid');
+    grid.innerHTML = '';
+
+    // "Add New" Card
+    const addCard = document.createElement('div');
+    addCard.className = 'inventory-card inventory-card-add';
+    addCard.innerHTML = `
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; color: var(--primary-color);">+</div>
+            <div style="font-weight: 600;">Crear Nuevo</div>
+        </div>
+    `;
+    addCard.onclick = () => openModal('modal-crear-producto');
+    grid.appendChild(addCard);
+
+    // Item Cards
+    items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'inventory-card';
+        card.innerHTML = `
+            <div class="inv-img">
+                ${item.foto_url ? `<img src="${item.foto_url}" onerror="this.src=''">` : '<span>Sin Foto</span>'}
+            </div>
+            <div class="inv-body">
+                <div class="inv-title">${item.nombre}</div>
+                <div class="inv-meta">ID: ${item.id} | ${item.unidad || 'u'}</div>
+                <div class="inv-price">$${item.precio.toFixed(2)}</div>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.8rem; color:var(--text-secondary);">Stock: <b id="stock-${item.id}">${item.stock}</b></span>
+                    <div class="inv-stock-ctrl">
+                        <button class="inv-stock-btn" onclick="updateStock(${item.id}, -1)">-</button>
+                        <button class="inv-stock-btn" onclick="updateStock(${item.id}, 1)">+</button>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-sm" style="margin-top: 1rem;" onclick="addToCartItem(${item.id}, '${item.nombre}', ${item.precio})">
+                    Agregar 🛒
+                </button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+// Filter
+function filterInventory(query) {
+    query = query.toLowerCase();
+    const filtered = localInventory.filter(item => 
+        item.nombre.toLowerCase().includes(query) || 
+        item.id.toString().includes(query)
+    );
+    renderInventory(filtered);
+}
+
+// Quick Stock Update
+async function updateStock(id, delta) {
+    // Optimistic UI update
+    const stockEl = document.getElementById(`stock-${id}`);
+    const current = parseInt(stockEl.innerText);
+    stockEl.innerText = current + delta;
     
-    if(!id || !qty) return;
-    
-    carrito.push({id_producto: parseInt(id), cantidad: parseInt(qty)});
+    // Update local state
+    const item = localInventory.find(i => i.id === id);
+    if(item) item.stock += delta;
+
+    try {
+        await fetch(`${API_BASE}/inventario/stock`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id: id, cambio: delta})
+        });
+    } catch(e) { console.error(e); }
+}
+
+// Cart Logic
+function addToCartItem(id, nombre, precio) {
+    const existing = carrito.find(i => i.id_producto === id);
+    if(existing) {
+        existing.cantidad++;
+    } else {
+        carrito.push({id_producto: id, nombre: nombre, precio: precio, cantidad: 1});
+    }
     renderCart();
 }
 
 function renderCart() {
     const cartDiv = document.getElementById('pos-cart');
-    cartDiv.innerHTML = carrito.map((item, idx) => `
-        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding: 5px;">
-            <span>ID: ${item.id_producto} (x${item.cantidad})</span>
-            <button class="btn btn-sm btn-danger" onclick="removeFromCart(${idx})">X</button>
+    const totalEl = document.getElementById('cart-total');
+    let total = 0;
+
+    if(carrito.length === 0) {
+        cartDiv.innerHTML = `<p style="color: var(--text-secondary); text-align: center;">Carrito vacío</p>`;
+        totalEl.innerText = "$0.00";
+        return;
+    }
+
+    cartDiv.innerHTML = carrito.map((item, idx) => {
+        const subtotal = item.precio * item.cantidad;
+        total += subtotal;
+        return `
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 0.5rem 0; align-items: center;">
+            <div style="font-size: 0.9rem;">
+                <div style="font-weight: 500;">${item.nombre}</div>
+                <div style="color: var(--text-secondary); font-size: 0.8rem;">$${item.precio} x ${item.cantidad}</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-weight: 600;">$${subtotal.toFixed(2)}</div>
+                <button class="btn btn-sm btn-danger" style="padding: 2px 6px; font-size: 0.7rem; margin-top: 2px;" onclick="removeFromCart(${idx})">Eliminar</button>
+            </div>
         </div>
-    `).join('');
+    `}).join('');
+    
+    totalEl.innerText = `$${total.toFixed(2)}`;
 }
 
 function removeFromCart(idx) {

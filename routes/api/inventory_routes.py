@@ -26,3 +26,22 @@ def list_products():
         return jsonify(productos), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@inventory_api.route('/stock', methods=['POST'])
+def update_stock_endpoint():
+    data = request.get_json()
+    id_prod = data.get('id')
+    cambio = data.get('cambio')
+    
+    if not id_prod or cambio is None:
+         return jsonify({"error": "ID y cambio requeridos"}), 400
+
+    try:
+        from services.inventory_service import actualizar_stock
+        prod, msg = actualizar_stock(id_prod, cambio)
+        if not prod:
+            return jsonify({"error": msg}), 404
+            
+        return jsonify({"mensaje": msg, "nuevo_stock": prod.stock_actual}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

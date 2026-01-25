@@ -111,31 +111,42 @@
         {% if user.role == 'admin' %}
         <div id="panel-ventas" class="panel">
             <div class="panel-header">
-                <h1 class="panel-title">Punto de Venta</h1>
-                <button class="btn btn-primary" onclick="openModal('modal-crear-producto')">Crear Producto</button>
+                <h1 class="panel-title">Punto de Venta e Inventario</h1>
             </div>
 
-            <div class="grid grid-2">
-                <div class="card">
-                    <h3>Agregar Producto</h3>
-                    <!-- Simple form for demo purposes -->
-                    <div class="form-group">
-                        <label>ID Producto</label>
-                        <input type="number" id="pos-prod-id">
+            <!-- Search Bar -->
+            <div class="card" style="margin-bottom: 2rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <input type="text" id="inventory-search" placeholder="🔍 Buscar por nombre o código..."
+                        onkeyup="filterInventory(this.value)" style="font-size: 1.1rem; padding: 1rem;">
+                </div>
+            </div>
+
+            <!-- Main Layout with Sidebar Cart -->
+            <div style="display: grid; grid-template-columns: 1fr 350px; gap: 2rem;">
+
+                <!-- Inventory Grid -->
+                <div>
+                    <div id="inventory-grid" class="inventory-grid">
+                        <!-- Filled by JS -->
                     </div>
-                    <div class="form-group">
-                        <label>Cantidad</label>
-                        <input type="number" id="pos-cantidad" value="1">
-                    </div>
-                    <button class="btn btn-primary btn-block" onclick="addToCart()">Agregar al Carrito</button>
                 </div>
 
-                <div class="card">
-                    <h3>Carrito</h3>
-                    <div id="pos-cart" style="min-height: 100px; margin-bottom: 1rem;">
-                        <p style="color: var(--text-secondary);">Carrito vacío</p>
+                <!-- Sticky Cart -->
+                <div class="card" style="height: fit-content; position: sticky; top: 1rem;">
+                    <h3>🛒 Carrito</h3>
+                    <div id="pos-cart"
+                        style="min-height: 200px; margin: 1rem 0; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                        <p style="color: var(--text-secondary); text-align: center;">Carrito vacío</p>
                     </div>
-                    <button class="btn btn-success btn-block" onclick="processSale()">Confirmar Venta</button>
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: auto;">
+                        <div
+                            style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 1rem;">
+                            <span>Total:</span>
+                            <span id="cart-total">$0.00</span>
+                        </div>
+                        <button class="btn btn-success btn-block" onclick="processSale()">Confirmar Venta</button>
+                    </div>
                 </div>
             </div>
         </div>
