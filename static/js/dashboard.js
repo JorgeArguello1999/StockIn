@@ -20,6 +20,7 @@ function showPanel(panelId, btn) {
     if (panelId === 'panel-ventas') initPOS();
     if (panelId === 'panel-caja') loadLiquidaciones();
     if (panelId === 'panel-facturas') loadFacturas();
+    if (panelId === 'panel-usuarios') loadUsers();
 }
 
 // Modals
@@ -1332,11 +1333,179 @@ function renderDashboard(data) {
     });
 }
 
+// === USER MANAGEMENT (Admin) ===
+
+async function loadUsers() {
+    const grid = document.getElementById('users-grid');
+    grid.innerHTML = '<div style="color:var(--text-secondary); text-align:center;">Cargando...</div>';
+    // Remove grid class to allow table full width if needed, or ensure CSS handles it. 
+    // The CSS .user-grid has grid-template-columns. We should probably override that in JS or CSS.
+    // Let's reset the style of the container to be a simple block for the table.
+    grid.style.display = 'block';
+    
+    try {
+        const res = await fetch(`${API_BASE}/users/listar`);
+        if(!res.ok) throw new Error("Acceso denegado o error");
+        
+        const users = await res.json();
+        
+        if(users.length === 0) {
+             grid.innerHTML = '<div style="text-align:center;">No hay usuarios registrados</div>';
+             return;
+        }
+
+        let tableHtml = `
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Fecha Registro</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        tableHtml += users.map(u => {
+            const initials = u.username.substring(0,2).toUpperCase();
+            return `
+                <tr>
+                    <td style="display:flex; align-items:center; gap:0.5rem;">
+                        <div class="user-avatar" style="width:30px; height:30px; font-size:0.8rem; margin:0;">${initials}</div>
+                        <span>${u.username}</span>
+                    </td>
+                    <td>${u.email}</td>
+                    <td><span class="badge ${u.role === 'admin' ? 'role-admin' : 'role-mechanic'}">${u.role}</span></td>
+                    <td>${u.created_at}</td>
+                    <td>
+                        <div style="display:flex; gap:0.5rem;">
+                            <button class="btn btn-sm btn-warning" onclick="promptResetPassword(${u.id}, '${u.username}')" title="Reset Password">
+                                🔑
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="promptDeleteUser(${u.id}, '${u.role}')" title="Eliminar">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        
+        tableHtml += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        grid.innerHTML = tableHtml;
+        
+    } catch(e) {
+        grid.innerHTML = `<div style="color:var(--danger-color); text-align:center;">Error: ${e.message}</div>`;
+    }
+}
+
+async function handleCreateUser(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+    
+    try {
+        const res = await fetch(`${API_BASE}/users/crear`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        
+        if(res.ok) {
+            showAlert(result.mensaje, "Usuario Creado");
+            closeModal('modal-crear-usuario');
+            e.target.reset();
+            loadUsers();
+        } else {
+            showAlert(result.error || "Error al crear", "Error");
+        }
+    } catch(e) { showAlert("Error de red", "Error"); }
+}
+
+function promptResetPassword(uid, uname) {
+    document.getElementById('reset-user-id').value = uid;
+    document.getElementById('reset-user-name').innerText = uname;
+    document.getElementById('new-password').value = ''; 
+    openModal('modal-reset-password');
+}
+
+async function handleResetPassword(e) {
+    e.preventDefault();
+    const uid = document.getElementById('reset-user-id').value;
+    const pwd = document.getElementById('new-password').value;
+    
+    try {
+        const res = await fetch(`${API_BASE}/users/reset-password/${uid}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({password: pwd})
+        });
+        const result = await res.json();
+        
+        if(res.ok) {
+            showAlert(result.mensaje, "Éxito");
+            closeModal('modal-reset-password');
+        } else {
+            showAlert(result.error, "Error");
+        }
+    } catch(e) { showAlert("Error de red", "Error"); }
+}
+
+function promptDeleteUser(uid, role) {
+    if(role === 'admin') {
+        document.getElementById('delete-admin-id').value = uid;
+        document.getElementById('system-password').value = '';
+        openModal('modal-confirmar-delete');
+    } else {
+        if(confirm("¿Eliminar este usuario permanentemente?")) {
+            submitDeleteUser(uid);
+        }
+    }
+}
+
+async function handleDeleteAdmin(e) {
+    e.preventDefault();
+    const uid = document.getElementById('delete-admin-id').value;
+    const sysPass = document.getElementById('system-password').value;
+    
+    submitDeleteUser(uid, sysPass);
+    closeModal('modal-confirmar-delete');
+}
+
+async function submitDeleteUser(uid, sysPass=null) {
+    try {
+        const payload = sysPass ? { system_password: sysPass } : {};
+        const res = await fetch(`${API_BASE}/users/eliminar/${uid}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        
+        if(res.ok) {
+            showAlert(result.mensaje, "Eliminado");
+            loadUsers();
+        } else {
+            showAlert(result.error, "Error");
+        }
+    } catch(e) { showAlert("Error de red", "Error"); }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Determine active panel and init proper data
     const activePanel = document.querySelector('.panel.active');
     if (activePanel) {
         if (activePanel.id === 'panel-inicio') loadDashboardMetrics();
         if (activePanel.id === 'panel-taller') refreshTaller();
+        if (activePanel.id === 'panel-usuarios') loadUsers();
     }
 });
