@@ -9,4 +9,5 @@ dependencies = [
     "flask-login>=0.6.3",
     "flask-migrate>=4.1.0",
     "flask-sqlalchemy>=3.1.1",
+    "fpdf2>=2.8.5",
 ]
