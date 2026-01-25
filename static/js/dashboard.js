@@ -327,6 +327,7 @@ function createOtCard(ot, columnId) {
         ${!isFinalized ? `
         <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
             <button class="btn btn-sm btn-primary" onclick="openRepuestoModal(${ot.id})">+ Repuesto</button>
+            <button class="btn btn-sm btn-secondary" onclick="openOtDetails(${ot.id})">🔍 Detalles</button>
             ${ot.estado === 'Pendiente' ? 
                 `<button class="btn btn-sm btn-success" onclick="startWork(${ot.id})">Iniciar</button>` : 
                 `<button class="btn btn-sm btn-danger" onclick="finishWork(${ot.id})">Finalizar</button>`
@@ -442,6 +443,54 @@ async function handleAddRepuesto(e) {
             showAlert('Error: ' + result.error, 'Error');
         }
     } catch(e) { showAlert('Error de red', 'Error'); }
+}
+
+async function openOtDetails(otId) {
+    currentDetailOtId = otId;
+    openModal('modal-ot-detalles');
+    const tbody = document.getElementById('ot-detalles-list');
+    tbody.innerHTML = '<tr><td colspan="4">Cargando...</td></tr>';
+    
+    try {
+        const res = await fetch(`${API_BASE}/taller/orden/${otId}/detalles`);
+        const detalles = await res.json();
+        
+        if (detalles.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No hay repuestos asignados</td></tr>';
+        } else {
+            tbody.innerHTML = detalles.map(d => `
+                <tr>
+                    <td>${d.producto}</td>
+                    <td>${d.cantidad}</td>
+                    <td>$${d.precio}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="handleReturnPart(${d.id})">Devolver</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    } catch(e) {
+         tbody.innerHTML = '<tr><td colspan="4">Error cargando detalles</td></tr>';
+    }
+}
+
+async function handleReturnPart(detId) {
+    if(!confirm('¿Estás seguro de devolver este repuesto? El stock será restaurado.')) return;
+    
+    try {
+        const res = await fetch(`${API_BASE}/taller/detalles/${detId}/devolver`, { method: 'POST' });
+        const result = await res.json();
+        if(res.ok) {
+            showAlert(result.mensaje, "Devolución Exitosa");
+            // Refresh details list
+            openOtDetails(currentDetailOtId); 
+            // Also refresh inventory visually if open
+        } else {
+            showAlert("Error: " + result.error, "Error");
+        }
+    } catch(e) {
+        showAlert("Error de red", "Error");
+    }
 }
 
 
@@ -844,6 +893,7 @@ async function handleDeleteVehicle(placa) {
 
 // Vehicle Detail & History
 let currentDetailPlaca = null;
+let currentDetailOtId = null;
 
 async function openVehicleDetail(v) {
     currentDetailPlaca = v.placa;

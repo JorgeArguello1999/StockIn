@@ -509,6 +509,34 @@
         </div>
     </div>
 
+    <!-- Modal Repuestos/Detalles Orden -->
+    <div id="modal-ot-detalles" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Detalles de Orden de Trabajo</h3>
+                <button class="close-modal" onclick="closeModal('modal-ot-detalles')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4>Repuestos Asignados</h4>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cant</th>
+                                <th>Precio</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ot-detalles-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Generic Alert Modal -->
     <div id="modal-alert" class="modal-overlay hidden" style="z-index: 2000;">
         <div class="modal" style="max-width: 400px; text-align: center;">

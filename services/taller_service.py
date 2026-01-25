@@ -84,3 +84,31 @@ def obtener_historial_vehiculo(placa):
         "estado": ot.estado,
         "total": 0.0 # Placeholder, need billing logic to calc total
     } for ot in ordenes]
+
+def listar_detalles(numero_ot):
+    detalles = OrdenDetalleRepuesto.query.filter_by(orden_id=numero_ot).all()
+    return [{
+        "id": d.id,
+        "producto": d.producto.nombre,
+        "cantidad": d.cantidad,
+        "precio": d.precio_snapshot,
+        "subtotal": d.cantidad * d.precio_snapshot
+    } for d in detalles]
+
+def devolver_repuesto(detalle_id):
+    try:
+        detalle = OrdenDetalleRepuesto.query.get(detalle_id)
+        if not detalle:
+            return False, "Detalle no encontrado"
+            
+        # Restore stock
+        producto = detalle.producto
+        if producto:
+            producto.stock_actual += detalle.cantidad
+            
+        db.session.delete(detalle)
+        db.session.commit()
+        return True, "Repuesto devuelto y stock restaurado"
+    except Exception as e:
+        db.session.rollback()
+        raise e
