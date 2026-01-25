@@ -1,27 +1,26 @@
-from dotenv import load_dotenv
-from os import getenv
-load_dotenv()
-
 from flask import Flask
-from utils.config import config
+from extensions import db, migrate
 
-# Models
-from models import init_db
+def create_app():
+    app = Flask(__name__)
+    
+    # Configuration
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///stockin.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Routes 
-from routes import register_routes
+    # Initialize extensions
+    db.init_app(app)
+    migrate.init_app(app, db)
 
-app = Flask(__name__)
-app.config.from_object(config['default'])
+    import models # Register models for migration
 
-# Initialize DB and Migrations
-init_db(app)
+    # Register Blueprints
+    from routes import register_routes
+    register_routes(app)
 
-register_routes(app)
+    return app
 
-if __name__ == "__main__":
-    app.run(
-        host=getenv('HOST', '127.0.0.1'), 
-        port=int(getenv('PORT', 5000)), 
-        debug=getenv('DEBUG')
-    )
+app = create_app()
+
+if __name__ == '__main__':
+    app.run(debug=True)
