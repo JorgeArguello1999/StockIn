@@ -305,6 +305,48 @@
         </div>
     </div>
 
+    <!-- Modal Editar Producto (POS) -->
+    <div id="modal-editar-producto" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Editar Producto</h3>
+                <button class="close-modal" onclick="closeModal('modal-editar-producto')">&times;</button>
+            </div>
+            <form id="form-editar-producto" onsubmit="handleEditProduct(event)">
+                <input type="hidden" id="edit-prod-id" name="id">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="edit-nombre" name="nombre" required>
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <input type="text" id="edit-descripcion" name="descripcion">
+                </div>
+                <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label>Precio ($)</label>
+                        <input type="number" step="0.01" id="edit-precio" name="precio" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Unidad de Medida</label>
+                        <select id="edit-unidad" name="unidad_medida"
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+                            <option value="unidad">Unidad</option>
+                            <option value="litro">Litro</option>
+                            <option value="galon">Galón</option>
+                            <option value="kit">Kit</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Foto URL</label>
+                    <input type="url" id="edit-foto" name="foto_url">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Actualizar Producto</button>
+            </form>
+        </div>
+    </div>
+
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 

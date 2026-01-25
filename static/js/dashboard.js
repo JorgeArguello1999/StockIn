@@ -215,9 +215,18 @@ function renderInventory(items) {
     items.forEach(item => {
         const card = document.createElement('div');
         card.className = 'inventory-card';
+        // Placeholder handling
+        const imgSrc = item.foto_url && item.foto_url.trim() !== '' ? item.foto_url : 'https://placehold.co/200x120?text=No+Image';
+        
+        // Escape json for onclick
+        const itemJson = JSON.stringify(item).replace(/"/g, '&quot;');
+
         card.innerHTML = `
+            <div style="position: absolute; top: 5px; right: 5px; z-index: 10;">
+                <button class="btn btn-sm" style="background: rgba(0,0,0,0.5); padding: 2px 6px;" onclick="openEditModal(${itemJson})">✏️</button>
+            </div>
             <div class="inv-img">
-                ${item.foto_url ? `<img src="${item.foto_url}" onerror="this.src=''">` : '<span>Sin Foto</span>'}
+                <img src="${imgSrc}" onerror="this.src='https://placehold.co/200x120?text=Error'">
             </div>
             <div class="inv-body">
                 <div class="inv-title">${item.nombre}</div>
@@ -239,6 +248,41 @@ function renderInventory(items) {
         `;
         grid.appendChild(card);
     });
+}
+
+// Edit Logic
+function openEditModal(item) {
+    document.getElementById('edit-prod-id').value = item.id;
+    document.getElementById('edit-nombre').value = item.nombre;
+    document.getElementById('edit-descripcion').value = item.descripcion || '';
+    document.getElementById('edit-precio').value = item.precio;
+    document.getElementById('edit-unidad').value = item.unidad || 'unidad';
+    document.getElementById('edit-foto').value = item.foto_url || '';
+    
+    openModal('modal-editar-producto');
+}
+
+async function handleEditProduct(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+    const id = data.id;
+    
+    try {
+        const res = await fetch(`${API_BASE}/inventario/editar/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        if(res.ok) {
+            alert('Producto actualizado');
+            closeModal('modal-editar-producto');
+            fetchInventory().then(() => renderInventory(localInventory)); // Refresh
+        } else {
+            alert('Error al actualizar');
+        }
+    } catch(e) { alert('Error de red'); }
 }
 
 // Filter

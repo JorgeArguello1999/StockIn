@@ -45,3 +45,16 @@ def update_stock_endpoint():
         return jsonify({"mensaje": msg, "nuevo_stock": prod.stock_actual}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@inventory_api.route('/editar/<int:id_prod>', methods=['PUT'])
+def edit_product_endpoint(id_prod):
+    data = request.get_json()
+    try:
+        from services.inventory_service import editar_producto
+        prod, msg = editar_producto(id_prod, data)
+        if not prod:
+            return jsonify({"error": msg}), 404
+            
+        return jsonify({"mensaje": msg}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

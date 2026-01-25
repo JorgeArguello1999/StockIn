@@ -52,3 +52,24 @@ def actualizar_stock(id_producto, cambio):
     except Exception as e:
         db.session.rollback()
         raise e
+
+def editar_producto(id_producto, data):
+    """
+    Updates product details.
+    """
+    try:
+        producto = Inventario.query.get(id_producto)
+        if not producto:
+            return None, "Producto no encontrado"
+
+        if 'nombre' in data: producto.nombre = data['nombre']
+        if 'descripcion' in data: producto.descripcion = data['descripcion']
+        if 'precio' in data: producto.precio = float(data['precio'])
+        if 'unidad_medida' in data: producto.unidad_medida = data['unidad_medida']
+        if 'foto_url' in data: producto.foto_url = data['foto_url']
+        
+        db.session.commit()
+        return producto, "Producto actualizado"
+    except Exception as e:
+        db.session.rollback()
+        raise e
