@@ -76,4 +76,41 @@ def listar_ordenes_pendientes_pago():
             "total_repuestos": costo_repuestos
         })
         
+
+def listar_facturas(query=None):
+    """
+    List history of invoices, optionally filtered by client name, cedula, or plate (via connected objects).
+    """
+    base_query = Factura.query.join(Factura.cliente)
+    
+    if query:
+        search = f"%{query}%"
+        # Search in Client Name, Cedula
+        # Search in Vehicle Plate (Need to join OT -> Vehicle)
+        # Or if it's a direct sale, maybe search in details? Primarily Client/Plate
+        
+        # We need an outer join for OTs to search plates, as direct sales have no OT/Plate
+        # But Factura has 'orden' relationship
+        # Let's keep it simple: Search Client Name/Cedula first
+        base_query = base_query.filter(
+            (Cliente.nombre.ilike(search)) | 
+            (Cliente.cedula.ilike(search)) |
+            (str(Factura.nro_factura).ilike(search))
+        )
+    
+    facturas = base_query.order_by(Factura.fecha_emision.desc()).all()
+    
+    result = []
+    for f in facturas:
+        cliente_nombre = f.cliente.nombre
+        tipo = "Venta Directa" if f.venta_id else "Servicio Taller"
+        
+        result.append({
+            "nro_factura": f.nro_factura,
+            "fecha": f.fecha_emision.strftime('%Y-%m-%d %H:%M'),
+            "cliente": cliente_nombre,
+            "cedula": f.cliente.cedula,
+            "total": f.total_final,
+            "tipo": tipo
+        })
     return result

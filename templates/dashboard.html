@@ -51,6 +51,11 @@
                     💰 Caja
                 </button>
             </li>
+            <li class="nav-item">
+                <button class="nav-btn" onclick="showPanel('panel-facturas', this)">
+                    📑 Facturas
+                </button>
+            </li>
             {% endif %}
         </ul>
 
@@ -179,6 +184,41 @@
                     </thead>
                     <tbody id="lista-caja">
                         <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- === PANEL FACTURAS (ADMIN) === -->
+        <div id="panel-facturas" class="panel">
+            <div class="panel-header">
+                <h1 class="panel-title">Historial de Facturas</h1>
+                <button class="btn btn-primary btn-sm" onclick="loadFacturas()">🔄 Refresh</button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="card" style="margin-bottom: 2rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <input type="text" id="facturas-search" placeholder="🔍 Buscar por cliente, cédula o número..."
+                        onkeyup="filterFacturas(this.value)" style="font-size: 1.1rem; padding: 1rem;">
+                </div>
+            </div>
+
+            <div class="card">
+                <table style="width:100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="text-align:left; border-bottom: 2px solid var(--border-color);">
+                            <th style="padding:1rem;">Nro</th>
+                            <th style="padding:1rem;">Fecha</th>
+                            <th style="padding:1rem;">Cliente</th>
+                            <th style="padding:1rem;">Cédula</th>
+                            <th style="padding:1rem;">Tipo</th>
+                            <th style="padding:1rem;">Total</th>
+                            <th style="padding:1rem;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-facturas">
+                        <!-- Filled by JS -->
                     </tbody>
                 </table>
             </div>
@@ -538,6 +578,74 @@
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+
+    </div>
+
+    <!-- Modal Tipo Factura (POS) -->
+    <div id="modal-tipo-factura" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 500px; text-align: center;">
+            <h3>Seleccione Tipo de Factura</h3>
+            <div style="margin: 2rem 0; display: flex; gap: 1rem; justify-content: center;">
+                <button class="btn btn-primary" onclick="submitSaleGeneric()"
+                    style="padding: 1rem 2rem; font-size: 1.1rem;">
+                    👤 Consumidor Final
+                </button>
+                <button class="btn btn-secondary" onclick="openDatosFactura()"
+                    style="padding: 1rem 2rem; font-size: 1.1rem;">
+                    📝 Factura con Datos
+                </button>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="closeModal('modal-tipo-factura')">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Modal Datos Factura (POS) -->
+    <div id="modal-datos-factura" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Datos de Facturación</h3>
+                <button class="close-modal" onclick="closeModal('modal-datos-factura')">&times;</button>
+            </div>
+
+            <!-- We can reuse client search logic or create simplified -->
+            <div class="form-group" style="position: relative;">
+                <label>Buscar Cliente (Cédula o Nombre)</label>
+                <input type="text" id="factura-client-search" placeholder="Escriba para buscar..."
+                    onkeyup="debouncedClientSearchFactura(this.value)" autocomplete="off">
+                <div id="factura-client-results" class="dropdown-results hidden"></div>
+            </div>
+
+            <form id="form-datos-factura" onsubmit="submitSaleNamed(event)">
+                <input type="hidden" id="factura-id-cliente" name="id">
+                <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label>Cédula/RUC *</label>
+                        <input type="text" id="factura-cedula" name="cedula" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre *</label>
+                        <input type="text" id="factura-nombre" name="nombre" required>
+                    </div>
+                </div>
+                <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="text" id="factura-telefono" name="telefono">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="factura-email" name="email">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Dirección</label>
+                    <input type="text" id="factura-direccion" name="direccion">
+                </div>
+
+                <button type="submit" class="btn btn-success btn-block">Confirmar y Facturar</button>
+            </form>
         </div>
     </div>
 

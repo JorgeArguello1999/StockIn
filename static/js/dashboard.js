@@ -18,6 +18,7 @@ function showPanel(panelId, btn) {
     if (panelId === 'panel-taller') refreshTaller();
     if (panelId === 'panel-ventas') initPOS();
     if (panelId === 'panel-caja') loadLiquidaciones();
+    if (panelId === 'panel-facturas') loadFacturas();
 }
 
 // Modals
@@ -750,27 +751,129 @@ function removeFromCart(idx) {
     renderCart();
 }
 
-async function processSale() {
+function processSale() {
     if(carrito.length === 0) return showAlert("Carrito vacío", "Aviso");
+    openModal('modal-tipo-factura');
+}
+
+async function submitSaleGeneric() {
+    await executeSale({ tipo: 'consumidor_final' });
+    closeModal('modal-tipo-factura');
+}
+
+function openDatosFactura() {
+    closeModal('modal-tipo-factura');
+    openModal('modal-datos-factura');
+}
+
+async function submitSaleNamed(e) {
+    if(e) e.preventDefault();
     
+    const id = document.getElementById('factura-id-cliente').value;
+    const cedula = document.getElementById('factura-cedula').value;
+    const nombre = document.getElementById('factura-nombre').value;
+    const telefono = document.getElementById('factura-telefono').value;
+    const email = document.getElementById('factura-email').value;
+    const direccion = document.getElementById('factura-direccion').value;
+    
+    const clientInfo = {
+        id: id,
+        cedula: cedula,
+        nombre: nombre,
+        telefono: telefono,
+        email: email,
+        direccion: direccion
+    };
+    
+    const success = await executeSale(clientInfo);
+    if(success) {
+        closeModal('modal-datos-factura');
+        document.getElementById('form-datos-factura').reset();
+    }
+}
+
+async function executeSale(clientInfo) {
     try {
         const res = await fetch(`${API_BASE}/venta/crear`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({items: carrito})
+            body: JSON.stringify({
+                items: carrito,
+                cliente_info: clientInfo
+            })
         });
         const result = await res.json();
         
         if(res.ok) {
-            showAlert(result.mensaje, 'Venta Confirmada');
+            // showAlert(result.mensaje, 'Venta Confirmada');
+            // Instead of just alert, show PDF option
+            if(result.pdf_url) {
+                if(confirm("Venta Exitosa. ¿Abrir Factura PDF?")) {
+                    window.open(result.pdf_url, '_blank');
+                }
+            } else {
+                 showAlert("Venta Exitosa (Sin PDF)", "Éxito");
+            }
+            
             carrito = [];
             renderCart();
-            // Refresh inventory grid to show updated stock
             fetchInventory().then(() => renderInventory(localInventory));
+            return true;
         } else {
             showAlert('Error: ' + result.error, 'Error');
+            return false;
         }
-    } catch(e) { showAlert('Error de red', 'Error'); }
+    } catch(e) { 
+        console.error(e);
+        showAlert('Error de red', 'Error');
+        return false;
+    }
+}
+
+// Factura Client Search
+let facturaClientTimeout;
+function debouncedClientSearchFactura(query) {
+    clearTimeout(facturaClientTimeout);
+    facturaClientTimeout = setTimeout(() => searchClientsFactura(query), 300);
+}
+
+async function searchClientsFactura(query) {
+    const resultsDiv = document.getElementById('factura-client-results');
+    if(query.length < 2) {
+        resultsDiv.classList.add('hidden');
+        return;
+    }
+    
+    try {
+        const res = await fetch(`${API_BASE}/clientes/buscar?q=${query}`);
+        const clients = await res.json();
+        
+        resultsDiv.innerHTML = '';
+        if(clients.length > 0) {
+            resultsDiv.classList.remove('hidden');
+            clients.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'dropdown-item';
+                div.innerHTML = `<b>${c.nombre}</b> - ${c.cedula}`;
+                div.onclick = () => selectClientFactura(c);
+                resultsDiv.appendChild(div);
+            });
+        } else {
+            resultsDiv.classList.add('hidden');
+        }
+    } catch(e) { console.error(e); }
+}
+
+function selectClientFactura(c) {
+    document.getElementById('factura-id-cliente').value = c.id_cliente || c.id; // API might return id or id_cliente
+    document.getElementById('factura-cedula').value = c.cedula;
+    document.getElementById('factura-nombre').value = c.nombre;
+    document.getElementById('factura-telefono').value = c.telefono;
+    document.getElementById('factura-email').value = c.email || '';
+    document.getElementById('factura-direccion').value = c.direccion || '';
+    
+    document.getElementById('factura-client-results').classList.add('hidden');
+    document.getElementById('factura-client-search').value = ''; 
 }
 
 
@@ -801,10 +904,6 @@ async function loadLiquidaciones() {
                 <td><span class="badge badge-primary">${ot.placa}</span></td>
                 <td>$${ot.total_repuestos.toFixed(2)}</td>
                 <td>
-                    <input type="number" 
-                           class="form-control" 
-                           placeholder="0.00" 
-                           id="mo-${ot.numero_ot}" 
                            min="0" step="0.01"
                            style="width: 100px;">
                 </td>
@@ -1049,4 +1148,62 @@ async function saveVehicleChanges() {
             showAlert(msg, 'Error');
         }
     } catch(e) { showAlert('Error de red', 'Error'); }
+}
+
+// === HISTORIAL FACTURAS ===
+let localFacturas = [];
+
+async function loadFacturas() {
+    const tbody = document.getElementById('lista-facturas');
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center">Cargando...</td></tr>';
+    
+    try {
+        const res = await fetch(`${API_BASE}/facturacion/historial`);
+        if(res.ok) {
+            localFacturas = await res.json();
+            renderFacturas(localFacturas);
+        } else {
+             tbody.innerHTML = '<tr><td colspan="7" class="text-center">Error al cargar historial</td></tr>';
+        }
+    } catch(e) { console.error(e); }
+}
+
+function renderFacturas(list) {
+    const tbody = document.getElementById('lista-facturas');
+    if(list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No hay facturas registradas</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = list.map(f => `
+        <tr style="border-bottom: 1px solid var(--border-color);">
+            <td style="padding:0.75rem;">#${f.nro_factura}</td>
+            <td style="padding:0.75rem;">${f.fecha}</td>
+            <td style="padding:0.75rem; font-weight:500;">${f.cliente}</td>
+            <td style="padding:0.75rem;">${f.cedula}</td>
+            <td style="padding:0.75rem;">${f.tipo}</td>
+            <td style="padding:0.75rem; color: var(--success-color); font-weight:bold;">$${f.total.toFixed(2)}</td>
+            <td style="padding:0.75rem;">
+                <button class="btn btn-sm btn-primary" onclick="openFacturaPDF(${f.nro_factura})">📄 PDF</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function filterFacturas(query) {
+    if(!query) {
+        renderFacturas(localFacturas);
+        return;
+    }
+    query = query.toLowerCase();
+    const filtered = localFacturas.filter(f => 
+        f.cliente.toLowerCase().includes(query) || 
+        f.cedula.includes(query) ||
+        f.nro_factura.toString().includes(query)
+    );
+    renderFacturas(filtered);
+}
+
+function openFacturaPDF(nro) {
+    window.open(`/static/invoices/factura_${nro}.pdf`, '_blank');
 }

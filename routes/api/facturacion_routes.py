@@ -1,7 +1,16 @@
 from flask import Blueprint, request, jsonify
-from services.facturacion_service import pre_liquidar_ot, generar_factura_final, listar_ordenes_pendientes_pago
+from services.facturacion_service import pre_liquidar_ot, generar_factura_final, listar_ordenes_pendientes_pago, listar_facturas
 
 facturacion_api = Blueprint('facturacion_api', __name__, url_prefix='/api/facturacion')
+
+@facturacion_api.route('/historial', methods=['GET'])
+def list_history():
+    query = request.args.get('q')
+    try:
+        facturas = listar_facturas(query)
+        return jsonify(facturas), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @facturacion_api.route('/pendientes', methods=['GET'])
 def list_pending_invoices():
