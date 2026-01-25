@@ -11,3 +11,4 @@ instance/
 migrations/__pycache__/
 migrations/versions/__pycache__/
 */*/__pycache__/
+static/invoices/*
