@@ -438,7 +438,11 @@
                     <label>Foto URL</label>
                     <input type="url" id="edit-foto" name="foto_url">
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">Actualizar Producto</button>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button type="button" class="btn btn-danger btn-block"
+                        onclick="deleteFromEditModal()">Eliminar</button>
+                    <button type="submit" class="btn btn-primary btn-block">Actualizar</button>
+                </div>
             </form>
         </div>
     </div>

@@ -591,7 +591,6 @@ function renderInventory(items) {
 
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span style="font-size:0.8rem; color:var(--text-secondary);">Stock: <b id="stock-${item.id}">${item.stock}</b></span>
-                    <button class="btn btn-sm btn-danger" style="padding: 2px 6px; font-size: 0.8rem;" onclick="handleDeleteProduct(${item.id})">🗑️</button>
                 </div>
 
                 <button class="btn btn-primary btn-sm" style="margin-top: 1rem;" onclick="addToCartItem(${item.id}, '${item.nombre}', ${item.precio}, ${item.stock})" ${isOutOfStock ? 'disabled style="cursor:not-allowed; background:var(--text-secondary)"' : ''}>
