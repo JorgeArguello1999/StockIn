@@ -1191,6 +1191,7 @@ function renderFacturas(list) {
             <td style="padding:0.75rem; color: var(--success-color); font-weight:bold;">$${f.total.toFixed(2)}</td>
             <td style="padding:0.75rem;">
                 <button class="btn btn-sm btn-primary" onclick="openFacturaPDF(${f.nro_factura})">📄 PDF</button>
+                <button class="btn btn-sm btn-secondary" onclick="regenerateFactura(${f.nro_factura})" style="margin-left:5px;">🔄</button>
             </td>
         </tr>
     `).join('');
@@ -1212,6 +1213,23 @@ function filterFacturas(query) {
 
 function openFacturaPDF(nro) {
     window.open(`/static/invoices/factura_${nro}.pdf`, '_blank');
+}
+
+async function regenerateFactura(nro) {
+    if(!confirm('¿Desea regenerar el PDF de la factura #' + nro + '?')) return;
+    
+    try {
+        const res = await fetch(`${API_BASE}/facturacion/regenerar/${nro}`, {method: 'POST'});
+        const result = await res.json();
+        
+        if(res.ok) {
+            showAlert('Factura regenerada exitosamente', 'Éxito');
+            // Optional: open it
+            // window.open(result.url, '_blank');
+        } else {
+            showAlert(result.error || 'Error al regenerar', 'Error');
+        }
+    } catch(e) { showAlert('Error de red', 'Error'); }
 }
 
 // === DASHBOARD METRICS ===

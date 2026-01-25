@@ -7,13 +7,14 @@ from datetime import datetime, timedelta, date
 
 def get_dashboard_metrics():
     today = date.today()
-    # first_day_of_month = today.replace(day=1) # Simple logic
+    today_start = datetime.combine(today, datetime.min.time())
+    today_end = datetime.combine(today, datetime.max.time())
+    
     first_day_of_month = datetime(today.year, today.month, 1)
 
     # 1. Sales Today
-    # Factura.fecha_emision is DateTime
     sales_today = db.session.query(func.sum(Factura.total_final))\
-        .filter(func.date(Factura.fecha_emision) == today).scalar() or 0.0
+        .filter(Factura.fecha_emision >= today_start, Factura.fecha_emision <= today_end).scalar() or 0.0
 
     # 2. Sales Month
     sales_month = db.session.query(func.sum(Factura.total_final))\
@@ -26,9 +27,9 @@ def get_dashboard_metrics():
     active_orders = OrdenTrabajo.query.filter(OrdenTrabajo.estado.in_(['Pendiente', 'En Proceso'])).count()
     
     # 4. Low Stock
-    low_stock_items = Inventario.query.filter(Inventario.stock <= 5).limit(5).all()
+    low_stock_items = Inventario.query.filter(Inventario.stock_actual <= 5).limit(5).all()
     low_stock_data = [
-        {"nombre": i.nombre, "stock": i.stock} for i in low_stock_items
+        {"nombre": i.nombre, "stock": i.stock_actual} for i in low_stock_items
     ]
 
     # 5. Sales Trend (Last 7 Days)
