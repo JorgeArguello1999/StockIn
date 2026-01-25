@@ -112,6 +112,7 @@
         <div id="panel-ventas" class="panel">
             <div class="panel-header">
                 <h1 class="panel-title">Punto de Venta</h1>
+                <button class="btn btn-primary" onclick="openModal('modal-crear-producto')">Crear Producto</button>
             </div>
 
             <div class="grid grid-2">
@@ -244,6 +245,51 @@
                     <input type="number" name="cantidad" value="1" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">Agregar a Orden</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Crear Producto (POS) -->
+    <div id="modal-crear-producto" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Crear Nuevo Producto</h3>
+                <button class="close-modal" onclick="closeModal('modal-crear-producto')">&times;</button>
+            </div>
+            <form id="form-crear-producto" onsubmit="handleCreateProduct(event)">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" name="nombre" required placeholder="Ej: Aceite 5W30">
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <input type="text" name="descripcion" placeholder="Detalles del producto">
+                </div>
+                <div class="grid grid-2" style="gap: 1rem; display: grid; grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label>Precio ($)</label>
+                        <input type="number" step="0.01" name="precio" required placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Stock Inicial</label>
+                        <input type="number" name="stock_inicial" required value="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Unidad de Medida</label>
+                    <select name="unidad_medida"
+                        style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+                        <option value="unidad">Unidad</option>
+                        <option value="litro">Litro</option>
+                        <option value="galon">Galón</option>
+                        <option value="kit">Kit</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Foto URL</label>
+                    <input type="url" name="foto_url" placeholder="https://...">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Guardar Producto</button>
             </form>
         </div>
     </div>

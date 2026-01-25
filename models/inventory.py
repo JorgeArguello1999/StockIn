@@ -3,8 +3,11 @@ from extensions import db
 class Inventario(db.Model):
     id_producto = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
+    descripcion = db.Column(db.String(255), nullable=True)
     precio = db.Column(db.Float, nullable=False)
     stock_actual = db.Column(db.Integer, nullable=False, default=0)
+    unidad_medida = db.Column(db.String(20), nullable=False, default='unidad') # unidad, litro, galon, etc.
+    foto_url = db.Column(db.String(255), nullable=True)
     es_favorito = db.Column(db.Boolean, default=False)
 
     def validar_stock(self, cantidad):

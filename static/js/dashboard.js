@@ -265,3 +265,26 @@ async function facturar(otId) {
         }
     } catch(e) { alert('Error de red'); }
 }
+
+async function handleCreateProduct(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+    
+    try {
+        const res = await fetch(`${API_BASE}/inventario/crear`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        
+        if(res.ok) {
+            alert(`Producto creado: ${result.nombre} (ID: ${result.id})`);
+            closeModal('modal-crear-producto');
+            e.target.reset();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    } catch(e) { alert('Error de red'); }
+}

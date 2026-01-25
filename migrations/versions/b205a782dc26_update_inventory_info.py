@@ -1,8 +1,8 @@
-"""Initial schema
+"""Update Inventory Info
 
-Revision ID: bebbd609489f
+Revision ID: b205a782dc26
 Revises: 
-Create Date: 2026-01-25 05:17:05.637656
+Create Date: 2026-01-25 05:47:53.779475
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'bebbd609489f'
+revision = 'b205a782dc26'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -31,8 +31,11 @@ def upgrade():
     op.create_table('inventario',
     sa.Column('id_producto', sa.Integer(), nullable=False),
     sa.Column('nombre', sa.String(length=100), nullable=False),
+    sa.Column('descripcion', sa.String(length=255), nullable=True),
     sa.Column('precio', sa.Float(), nullable=False),
     sa.Column('stock_actual', sa.Integer(), nullable=False),
+    sa.Column('unidad_medida', sa.String(length=20), nullable=False),
+    sa.Column('foto_url', sa.String(length=255), nullable=True),
     sa.Column('es_favorito', sa.Boolean(), nullable=True),
     sa.PrimaryKeyConstraint('id_producto')
     )
