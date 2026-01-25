@@ -25,6 +25,7 @@ class Vehiculo(db.Model):
     marca = db.Column(db.String(50), nullable=False)
     modelo = db.Column(db.String(50), nullable=False)
     cliente_id = db.Column(db.Integer, db.ForeignKey('cliente.id_cliente'), nullable=False)
+    activo = db.Column(db.Boolean, default=True, nullable=False)
 
     def __repr__(self):
         return f'<Vehiculo {self.placa}>'

@@ -9,6 +9,7 @@ class Inventario(db.Model):
     unidad_medida = db.Column(db.String(20), nullable=False, default='unidad') # unidad, litro, galon, etc.
     foto_url = db.Column(db.String(255), nullable=True)
     es_favorito = db.Column(db.Boolean, default=False)
+    activo = db.Column(db.Boolean, default=True, nullable=False)
 
     def validar_stock(self, cantidad):
         return self.stock_actual >= cantidad

@@ -23,8 +23,8 @@ def crear_producto(data):
         raise e
 
 def listar_productos():
-    """Returns all products for selector or list view."""
-    productos = Inventario.query.all()
+    """Returns all ACTIVE products for selector or list view."""
+    productos = Inventario.query.filter_by(activo=True).all()
     return [{
         "id": p.id_producto,
         "nombre": p.nombre,
@@ -85,9 +85,9 @@ def eliminar_producto(id_producto):
         if not producto:
             return False, "Producto no encontrado"
         
-        db.session.delete(producto)
+        producto.activo = False
         db.session.commit()
-        return True, "Producto eliminado"
+        return True, "Producto desactivado (Soft Delete)"
     except Exception as e:
         db.session.rollback()
         # Check for constraint error (e.g. linked to sales)

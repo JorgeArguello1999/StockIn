@@ -1,8 +1,8 @@
-"""Update Inventory Info
+"""empty message
 
-Revision ID: b205a782dc26
+Revision ID: 38d2fc60602e
 Revises: 
-Create Date: 2026-01-25 05:47:53.779475
+Create Date: 2026-01-25 13:33:40.513715
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'b205a782dc26'
+revision = '38d2fc60602e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -37,6 +37,7 @@ def upgrade():
     sa.Column('unidad_medida', sa.String(length=20), nullable=False),
     sa.Column('foto_url', sa.String(length=255), nullable=True),
     sa.Column('es_favorito', sa.Boolean(), nullable=True),
+    sa.Column('activo', sa.Boolean(), nullable=False),
     sa.PrimaryKeyConstraint('id_producto')
     )
     op.create_table('user',
@@ -62,6 +63,7 @@ def upgrade():
     sa.Column('marca', sa.String(length=50), nullable=False),
     sa.Column('modelo', sa.String(length=50), nullable=False),
     sa.Column('cliente_id', sa.Integer(), nullable=False),
+    sa.Column('activo', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['cliente_id'], ['cliente.id_cliente'], ),
     sa.PrimaryKeyConstraint('placa')
     )

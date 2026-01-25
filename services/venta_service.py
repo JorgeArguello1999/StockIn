@@ -21,6 +21,9 @@ def realizar_venta_directa(items, cliente_info=None):
             if not producto:
                  return None, f"Producto ID {item['id_producto']} no encontrado", None
             
+            if not producto.activo:
+                 return None, f"El producto '{producto.nombre}' no está disponible para la venta", None
+
             cantidad = item['cantidad']
             if not producto.validar_stock(cantidad):
                 return None, f"Stock insuficiente para {producto.nombre}", None

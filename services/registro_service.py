@@ -91,8 +91,8 @@ def procesar_registro(data):
         raise e
 
 def listar_vehiculos():
-    """Returns list of vehicles with owner info."""
-    vehiculos = Vehiculo.query.all()
+    """Returns list of ACTIVE vehicles with owner info."""
+    vehiculos = Vehiculo.query.filter_by(activo=True).all()
     return [{
         "placa": v.placa,
         "marca": v.marca,
@@ -114,13 +114,11 @@ def eliminar_vehiculo(placa):
         if not vehiculo:
             return False, "Vehículo no encontrado"
         
-        db.session.delete(vehiculo)
+        vehiculo.activo = False
         db.session.commit()
-        return True, "Vehículo eliminado"
+        return True, "Vehículo desactivado (Soft Delete)"
     except Exception as e:
         db.session.rollback()
-        if "foreign key constraint" in str(e).lower():
-            return False, "No se puede eliminar: tiene órdenes de trabajo asociadas."
         return False, str(e)
 
 def editar_vehiculo(placa, data):
