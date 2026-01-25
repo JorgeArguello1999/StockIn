@@ -315,22 +315,39 @@
 
     <!-- Modal Agregar Repuesto (Taller) -->
     <div id="modal-repuesto" class="modal-overlay hidden">
-        <div class="modal">
+        <div class="modal" style="max-width: 600px;">
             <div class="modal-header">
                 <h3>Solicitar Repuesto</h3>
                 <button class="close-modal" onclick="closeModal('modal-repuesto')">&times;</button>
             </div>
-            <form id="form-repuesto" onsubmit="handleAddRepuesto(event)">
+
+            <div class="form-group">
+                <input type="text" id="repuesto-search" placeholder="🔍 Buscar repuesto..."
+                    onkeyup="filterRepuestoGrid(this.value)" style="padding: 0.75rem;">
+            </div>
+
+            <div id="repuesto-selection-grid" class="scrollable-grid">
+                <!-- Populated by JS -->
+            </div>
+
+            <form id="form-repuesto" onsubmit="handleAddRepuesto(event)"
+                style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
                 <input type="hidden" id="repuesto-ot-id" name="ot_id">
-                <div class="form-group">
-                    <label>ID Producto</label>
-                    <input type="number" name="producto_id" required>
+                <div id="selected-repuesto-info" class="hidden"
+                    style="margin-bottom: 1rem; padding: 0.5rem; background: var(--bg-primary); border-radius: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div id="sel-rep-name" style="font-weight: 600;">Nombre</div>
+                        <div id="sel-rep-price" style="font-size: 0.9rem; color: var(--success-color);">$0.00</div>
+                    </div>
+                    <input type="hidden" id="sel-rep-id" name="producto_id" required>
                 </div>
+
                 <div class="form-group">
                     <label>Cantidad</label>
-                    <input type="number" name="cantidad" value="1" required>
+                    <input type="number" name="cantidad" value="1" min="1" required style="width: 100px;">
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">Agregar a Orden</button>
+                <button type="submit" id="btn-add-repuesto" class="btn btn-primary btn-block" disabled>Agregar a
+                    Orden</button>
             </form>
         </div>
     </div>

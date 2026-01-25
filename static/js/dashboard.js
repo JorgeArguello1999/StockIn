@@ -356,9 +356,69 @@ async function finishWork(otId) {
     } catch(e) { console.error(e); }
 }
 
-function openRepuestoModal(otId) {
+async function openRepuestoModal(otId) {
     document.getElementById('repuesto-ot-id').value = otId;
+    
+    // Reset Selection
+    document.getElementById('selected-repuesto-info').classList.add('hidden');
+    document.getElementById('sel-rep-id').value = '';
+    document.getElementById('btn-add-repuesto').disabled = true;
+    
     openModal('modal-repuesto');
+    
+    // Ensure inventory is loaded
+    if (localInventory.length === 0) {
+        await fetchInventory();
+    }
+    renderRepuestoSelection(localInventory);
+}
+
+function renderRepuestoSelection(list) {
+    const grid = document.getElementById('repuesto-selection-grid');
+    grid.innerHTML = '';
+    
+    list.forEach(item => {
+        if(item.stock <= 0) return; // Hide out of stock? Or show disabled. User wanted "select". Let's show only available.
+        
+        const card = document.createElement('div');
+        card.className = 'repuesto-select-card';
+        card.dataset.id = item.id;
+        
+        const imgSrc = item.foto_url || 'https://placehold.co/100?text=Parts';
+        
+        card.innerHTML = `
+            <img src="${imgSrc}">
+            <div style="font-size:0.8rem; font-weight:600;">${item.nombre}</div>
+            <div style="font-size:0.8rem; color:var(--success-color);">$${item.precio}</div>
+            <div style="font-size:0.7rem; color:var(--text-secondary);">Stock: ${item.stock}</div>
+        `;
+        
+        card.onclick = () => selectRepuesto(item, card);
+        grid.appendChild(card);
+    });
+}
+
+function filterRepuestoGrid(query) {
+    query = query.toLowerCase();
+    const filtered = localInventory.filter(i => 
+        i.nombre.toLowerCase().includes(query) || 
+        i.id.toString().includes(query)
+    );
+    renderRepuestoSelection(filtered);
+}
+
+function selectRepuesto(item, cardEl) {
+    // UI Highlight
+    document.querySelectorAll('.repuesto-select-card').forEach(c => c.classList.remove('selected'));
+    cardEl.classList.add('selected');
+    
+    // Update Form
+    document.getElementById('sel-rep-id').value = item.id;
+    document.getElementById('sel-rep-name').innerText = item.nombre;
+    document.getElementById('sel-rep-price').innerText = `$${item.precio}`;
+    
+    document.getElementById('selected-repuesto-info').classList.remove('hidden');
+    document.getElementById('btn-add-repuesto').disabled = false;
 }
 
 async function handleAddRepuesto(e) {
