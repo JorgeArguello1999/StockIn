@@ -55,3 +55,14 @@ def finalizar_orden(numero_ot):
     ot.estado = 'Finalizada'
     db.session.commit()
     return ot, "Orden finalizada"
+
+def listar_ordenes():
+    ordenes = OrdenTrabajo.query.all()
+    # Serialize manually for now
+    return [{
+        "id": ot.numeroOT,
+        "placa": ot.placa_vehiculo,
+        "estado": ot.estado,
+        "sintomas": ot.sintomas,
+        "categoria": ot.categoria_color
+    } for ot in ordenes]

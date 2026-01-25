@@ -1,7 +1,12 @@
 from flask import Blueprint, request, jsonify
-from services.taller_service import iniciar_servicio, agregar_repuesto, finalizar_orden
+from services.taller_service import iniciar_servicio, agregar_repuesto, finalizar_orden, listar_ordenes
 
 taller_api = Blueprint('taller_api', __name__, url_prefix='/api/taller')
+
+@taller_api.route('/ordenes', methods=['GET'])
+def list_orders():
+    ordenes = listar_ordenes()
+    return jsonify(ordenes), 200
 
 @taller_api.route('/iniciar/<int:ot_id>', methods=['POST'])
 def start_work(ot_id):

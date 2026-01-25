@@ -80,19 +80,31 @@ async function handleIngreso(e) {
 // I'll make a placeholder function.
 
 async function refreshTaller() {
-    // TODO: Need an endpoint to list active OTs. 
-    // For now, let's clear the board to show structure.
     document.querySelectorAll('.card-list').forEach(el => el.innerHTML = '');
     
-    // Example Card Injection
-    /*
-    createOtCard({id: 101, placa: 'ABC-123', estado: 'pendiente'}, 'col-pendiente');
-    */
-    console.log("Refreshing Taller Board...");
+    try {
+        const response = await fetch(`${API_BASE}/taller/ordenes`);
+        if(!response.ok) return console.error("Error fetching orders");
+        
+        const ordenes = await response.json();
+        
+        ordenes.forEach(ot => {
+            let colId = '';
+            if(ot.estado === 'Pendiente') colId = 'col-pendiente';
+            else if(ot.estado === 'En Proceso') colId = 'col-proceso';
+            else if(ot.estado === 'Finalizada') colId = 'col-listo';
+            
+            if(colId) createOtCard(ot, colId);
+        });
+    } catch(e) {
+        console.error("Connection error", e);
+    }
 }
 
 function createOtCard(ot, columnId) {
-    const col = document.getElementById(columnId);
+    const col = document.querySelector(`#${columnId} .card-list`);
+    if (!col) return;
+    
     const div = document.createElement('div');
     div.className = 'ot-card';
     div.innerHTML = `
